@@ -4297,6 +4297,19 @@ export default function Hearth() {
                   {error}
                 </div>
               )}
+              {(!!busy || uploading) && (
+                <div className="form-note" role="status" aria-live="polite">
+                  {uploading
+                    ? "Uploading your encrypted attachment…"
+                    : ["analysis", "review", "extract", "analyze-doc"].includes(
+                          modal,
+                        )
+                      ? "Meta is reviewing your source. This can take a little time…"
+                      : modal === "provider"
+                        ? "Checking your Meta connection…"
+                        : "Saving your changes…"}
+                </div>
+              )}
               <div className="modal-footer">
                 {modal === "read-doc" &&
                   activeDocument?.extraction?.status === "accepted" && (

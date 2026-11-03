@@ -41,7 +41,16 @@ jobs:
             if curl --max-time 2 -s http://127.0.0.1:5176/api/workspace | head -c 200 | grep -q 'Sign in'; then break; fi
             sleep 1
           done
-          npm run test:api
+          api_result=0
+          npm run test:api || api_result=$?
+          pooled_result=0
+          TEST_REJECTION_TRANSPORT=pooled node tests/rejection-transport.mjs || pooled_result=$?
+          isolated_result=0
+          TEST_REJECTION_TRANSPORT=close-rejected node tests/rejection-transport.mjs || isolated_result=$?
+          if [ "$api_result" -ne 0 ] || [ "$pooled_result" -ne 0 ] || [ "$isolated_result" -ne 0 ]; then
+            echo "Integration results: api=$api_result pooled=$pooled_result close-rejected=$isolated_result"
+            exit 1
+          fi
       - name: Preserve failed Worker diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
