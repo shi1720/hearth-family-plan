@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+const networkFetch = globalThis.fetch;
+const fetch = (url, init = {}) =>
+  networkFetch(url, { signal: AbortSignal.timeout(15000), ...init });
 const base = process.env.TEST_BASE_URL || "http://127.0.0.1:5176";
 if (!["127.0.0.1", "localhost", "::1"].includes(new URL(base).hostname))
   throw new Error(
