@@ -4,6 +4,10 @@
 
 Built by **Shivam Gupta**, with AI-assisted research, implementation and testing, for the Meta Global AI Developer Hackathon (November 2026). All application work in this repository was created during the hackathon. The included framework starter and third-party dependencies are credited separately below. The sample family, employers, insurers, policies and institutions are fictional.
 
+[![Watch the 2:53 product walkthrough](docs/hearth-video-thumbnail.png)](https://youtu.be/WRoXRO8BRIs)
+
+[Watch the public demo](https://youtu.be/WRoXRO8BRIs) · [Try Hearth](https://hearth-family-plan.web.app) · [Inspect the evaluation](https://hearth-family-plan.web.app/evaluation)
+
 ## What works
 
 - Private, persistent household workspaces with Firebase sign-in, verified-account planning and isolated private samples. The clean Hosting entry point is https://hearth-family-plan.web.app; the evaluation application is at /evaluation.
@@ -125,4 +129,6 @@ The navigation scrolls independently while privacy and account controls remain v
 
 ## Review materials
 
-See docs/project-story.txt for the project story, docs/review-testing.txt for the test walkthrough, and docs/review-youtube.txt for the title and description draft. The narrated review uses original fictional records and actual app footage edited for pacing. The generated voice is a standard Google Cloud Chirp voice, not a clone of a real person. The review video has not been uploaded to YouTube and the competition draft has not been submitted. Google popup sign-in did not complete in the automated browser session and remains a manual review item; anonymous sample sign-in was verified through the clean Firebase origin.
+See [the project story](docs/submission-story.txt), [testing instructions](docs/review-testing.txt), [video metadata](docs/submission-video-metadata.txt), [narration](docs/submission-narration.txt) and [timed captions](docs/submission-captions.srt). The [public 2:53 product walkthrough](https://youtu.be/WRoXRO8BRIs) opens with the family problem and follows preparation, careful handover and after-death administration, then explains Meta model roles, evaluation and the proposed buyer. It uses original fictional records and actual app footage edited for pacing. The generated voice is a standard Google Cloud Chirp voice, without cloning a real person.
+
+The entry was submitted on November 3, 2026 as Hearth Family Plan, Indie Developer, Build for Your World. Hearth was already taken as a team name. See [the publication receipt](docs/submission-receipt.txt). Google popup sign-in did not complete in the automated browser session and remains a manual review item; anonymous sample sign-in was verified through the clean Firebase origin.

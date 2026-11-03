@@ -1,89 +1,30 @@
-HEARTH VIDEO METADATA AND SUBMISSION DRAFT
-For local review only. Do not upload to YouTube, publish, or submit this draft.
+TITLE
+Hearth | A clearer path before and after a loss
 
-YOUTUBE TITLE
-Hearth | A family plan your people can use
+DESCRIPTION
+After someone dies, families should not have to become detectives while they are grieving.
 
-YOUTUBE DESCRIPTION
-A folder full of documents is only the beginning.
+Hearth helps families prepare ahead, share the right information with trusted people, and follow through after a death. This walkthrough follows Maria and Elena, a fictional family, through preparation, careful handover and practical administration.
 
-Hearth helps a family locate important originals, compare recorded account instructions with current wishes, choose what helpers can see, and track the evidence behind the next step. Meta Muse Spark reads a consented sample document. Muse Wonder reviews connected records and proposes source-backed follow-ups for a person to accept or reject.
+Meta Muse Spark 1.3 reads an authorised sample policy. Muse Wonder 1.0 connects records, identifies an unresolved beneficiary discrepancy and proposes a source-linked follow-up. A person reviews the suggestion and turns it into an accountable task. The app keeps permissions, authority evidence, claim stages and money records separate.
 
-This demonstration uses the fictional Maria Ellis family. The people, accounts, institutions and external confirmations shown are illustrative. Hearth records permitted work; it does not execute wills, certify authority, file claims, make donations or move money. The initial planning guidance is scoped to Florida and links to primary sources.
+The proposed buyer is an advice firm coordinating families over time. The illustrative $18,000 annual service for 250 households and the 300-hour labour break-even are business hypotheses, not validated customer results. Onboarding and professional work are separately scoped.
 
-The proposed customer is an independent advice firm. The pricing and staff-time savings shown are business hypotheses, not validated revenue or customer results.
+Try Hearth: https://hearth-family-plan.web.app
+Inspect the evaluation: https://hearth-family-plan.web.app/evaluation
+Public source: https://github.com/shi1720/hearth-family-plan
 
-Built by Shivam Gupta with AI-assisted research, implementation and testing.
+All family records and external evidence shown are original synthetic examples. No real death, court appointment, claim submission, payment or donation is represented. Hearth does not execute wills, independently verify legal authority, move money or replace qualified professional judgment. The initial workflow is scoped to Florida.
 
-Application: https://hearth-family-plan.web.app
-Evaluation: https://hearth-family-plan.web.app/evaluation
-Source: https://github.com/shi1720/hearth-family-plan
-Video URL: pending user review and any later authorised publication.
+Actual app recordings are edited for pacing. Narration is generated using a standard Google Cloud Chirp voice, without cloning an identifiable person. AI coding assistance is disclosed in the repository. Meta models are used in the application itself.
 
 CHAPTERS
-00:00 A folder is not the whole plan
-00:09 Maria's unresolved records
-00:35 Read and review the evidence
-00:48 A source-backed next step
-00:58 Confirmation needs evidence
-01:08 Share only what is needed
-01:22 Help when the plan is needed
-01:31 Claims and recorded funds
-01:51 A way to check the rules
-02:01 Optional giving
-02:08 A reason for a firm to buy
-02:25 A clearer next step
-
-Update chapter timestamps to match the rendered media. This list is an editing draft, not evidence that the video has been uploaded. Provide the separate caption file alongside the local video. Review automatic captions against the final audio before any later publication.
-
-SUBMISSION FORM DRAFT
-These are the actual field names supplied for preparation. Keep the form unsubmitted. Confirm the accepted entrant's track and final URLs before entering the final version. Add or remove copy only to match the form's actual character limits.
-
-TeamName
-Hearth
-
-track
-Indie
-
-Track review note, not field content: Indie is the proposed choice for an individual builder. Confirm against Shivam's accepted registration and any actual team members before saving this value. Commercial ambition does not by itself determine the track. Do not list an AI tool as a human participant or invent a second founder's contribution.
-
-theme
-Build for Your World
-
-ProjectDescription
-Having a will is not the same as having a plan the family can use. The original may be hard to find. An old account statement may conflict with the person's current wishes. A trusted helper may not know which records they may access.
-
-Hearth connects those practical handoffs in one private workspace. Families record people and responsibilities, documents and original locations, account and life-policy instructions, optional giving and evidence-backed next steps. Meta reads a consented PDF or image; the owner checks the transcription before analysis. Cross-record review proposes practical questions with exact source quotes. A person accepts or rejects each suggestion. Accepting one creates a task, not a legally binding instruction.
-
-Permission-aware sharing keeps care information findable without exposing every private account or wish. Death reporting and recorded authority review remain separate. Insurance records distinguish preparation, submission, approval and actual payment. An exportable preparation packet organises the next authorised step. The estate ledger separates proposed and confirmed entries and holds a recorded reserve. Giving intentions remain separate from implemented instructions and receipts.
-
-Our initial buyer is an independent financial-advice firm with continuing household coordination work. The proposed $18,000 annual readiness service covers 250 households with bounded work and separately scoped professional services. At an assumed $60 per avoidable staff hour, that fee needs 300 genuine annual hours saved if labour alone justifies purchase. No customer, paid pilot or measured saving is claimed yet.
-
-Shivam Gupta directed and built the original application with substantial AI assistance during the event. Framework dependencies, infrastructure and source references are credited separately. The demonstration uses a clearly fictional family and original synthetic documents. Hearth does not provide legal representation, certify execution or authority, submit court or insurer forms, make donations, or move money. Appropriate people and institutions perform those external actions.
-
-GitHub
-https://github.com/shi1720/hearth-family-plan
-
-GitHub review note, not field content: this is the current repository remote. Root must verify public anonymous readability and the final source revision before submission.
-
-3minvideo URL
-PENDING USER REVIEW. No public video URL exists for this review package. Do not enter a local file path, planned URL, or this explanatory text as if it were an accessible hosted video.
-
-describeMeta use
-Hearth uses Meta Model API directly. Standard-mode Muse Spark 1.3 reads explicitly consented PDF/image attachments and prepares structured source-text intake proposals. The owner compares the transcription with the original before accepting it. Standard-mode Muse Wonder 1.0 reviews the connected family plan for practical gaps and inconsistencies across documents, people, account instructions and open tasks.
-
-Server-side response validation requires structured fields and rejects quoted evidence that does not occur exactly in the submitted source. Proposals remain pending until a person accepts or dismisses them. Accepted tasks preserve their explanation and quote. The application, rather than the model, enforces access and state transitions. Model timeouts and usage caps preserve existing records and do not fabricate replacement results.
-
-whyMeta important
-The useful intelligence is connecting different records, rather than answering a generic question about wills. Multimodal reading lets the family begin with a document it already has. Cross-record reasoning can surface the practical difference between a reported wish, an institution's recorded instruction and an unresolved confirmation. Exact source excerpts make a proposed next step inspectable. Hearth combines those model capabilities with deterministic permissions, evidence states, version history and bookkeeping so assistance can become reviewable work without turning an AI suggestion into legal authority.
-
-partnerfeedback plus opinions
-We used Meta Model API directly; we are not claiming production use of Baseten, Modal or Fireworks in Hearth. We have no direct experience-based feedback on those partner inference services from this build.
-
-Our feedback on Meta tooling is that multimodal input and structured output make evidence-oriented workflows possible, while careful product design still needs to handle transcription mistakes, incomplete structured responses, latency and uncertain interpretations. Exact-quote validation and human confirmation were important to this application. We would value clearer model-specific examples for document input, consistent structured-output behavior, and detailed usage visibility for multimodal calls. These are observations and requests from this build, not benchmark comparisons or claims about every model request.
-
-OTHER REVIEW OPINIONS
-The strongest part of the submission is the source-to-action-to-confirmation flow, plus a visible privacy boundary. The main commercial uncertainty is whether an adviser will pay for the complete service once operating and professional time are counted. The main presentation risk is rushing through too many features instead of showing one meaningful completed handoff. No official numerical rubric score or dedicated legal-AI prize is claimed.
-
-CLEAN URL STATUS
-The Firebase Hosting address is live. Anonymous private-API access is rejected; isolated sample sessions and actual Meta model responses were verified through the clean origin. Google popup completion remains a manual review item. The video remains local and the submission form remains unsubmitted.
+00:00 When a loss becomes a paperwork project
+00:11 Who Hearth helps
+00:34 Prepare and expose unresolved gaps
+00:50 Meta Muse: from source to accountable task
+01:22 Handover with clear boundaries
+01:34 After a death: report and authority
+01:46 Claims, money records and optional giving
+02:15 Check the rules and model grounding
+02:29 Who buys it and why

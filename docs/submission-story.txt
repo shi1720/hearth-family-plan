@@ -1,0 +1,26 @@
+Hearth: a clearer path before and after a loss
+
+After someone dies, families inherit a second burden: finding the will, understanding who may act, following claims and keeping track of unfinished work. Hearth starts with that gap between having documents and having a plan people can actually use.
+
+Hearth is for families preparing ahead, trusted people helping them, and advice firms coordinating those relationships over time. It connects three stages in one private workspace.
+
+Prepare: record people and responsibilities, locate original documents, compare account instructions with current wishes, and identify unresolved questions. A personal wish never silently becomes an institution instruction.
+
+Handover: share only the information a permitted role needs. Reporting a death opens review; it does not grant authority. Evidence of death, recipient identity and appointment remains separate, and real-plan authority review requires an authorised professional member.
+
+Follow through: turn reviewed questions into tasks with a responsible person and completion evidence. Prepare claim packets, preserve insurer requirements, distinguish submission from approval and actual receipt, and keep proposed estate entries separate from confirmed records and reserves. Giving remains an optional, separately completed route. Hearth never moves money or replaces qualified professional judgment.
+
+Meta is central to the workflow. Muse Spark 1.3 reads authorised PDF/image sources and proposes text for a person to check. Muse Wonder 1.0 reviews the connected plan for practical dependencies. In the demonstration, it connects a policy naming Elena with an account summary that says the beneficiary is unknown. Every proposed next step preserves an exact quote and saved input. Human acceptance creates an open task, not a legal finding or executed change.
+
+I built Hearth with React and TypeScript, Cloudflare D1 and encrypted R2 storage, Firebase Authentication, a dedicated Cloud Run gateway and Firebase Hosting. The gateway verifies identities and signs upstream requests; the backend enforces role and scope checks. Invitation effects, state changes, audit records and snapshots commit atomically.
+
+The hardest challenge was preserving meaning across changes: a new attachment must not inherit old execution evidence, changed beneficiary facts must reopen confirmation, and a losing concurrent request must leave no invitation behind. I learned that an exact quote can still accompany an incorrect inference. The evaluation page therefore separates actual workflow rules from live output-format and grounding checks, and explains the limits of both.
+
+The proposed buyer is an advice firm. The illustrative annual service is $18,000 for 250 households, with bounded work and separately scoped professional services. At $60 per genuinely avoidable staff hour, 300 annual hours saved would cover the annual fee through labour alone. Demand, pricing and savings still require customer validation.
+
+Live product: https://hearth-family-plan.web.app
+Evaluation: https://hearth-family-plan.web.app/evaluation
+
+Testing: choose Explore a private sample for isolated fictional records. Try document intake, source-linked task acceptance, role previews, claim preparation, ledger states, optional giving and the Practice calculator. The shared sample AI allowance is bounded. Google or verified-email sign-in is required for real plans and invitations; automated Google popup completion remains a manual review item.
+
+The original application features were built during this event. The public repository identifies original work, third-party dependencies and AI coding assistance. The demo uses original synthetic records, including clearly fictional external evidence. The initial legal workflow is scoped to Florida. No real death, court appointment, insurance submission, payment or donation is represented by the demo.

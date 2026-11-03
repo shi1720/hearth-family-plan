@@ -1,0 +1,28 @@
+HEARTH PUBLICATION AND SUBMISSION
+Verified November 3, 2026
+
+Video: https://youtu.be/WRoXRO8BRIs
+Title: Hearth | A clearer path before and after a loss
+Duration: 173.073 seconds, 1920 by 1080.
+YouTube visibility: Public.
+YouTube initial copyright and Community Guidelines checks: No issues found.
+English timed subtitles published, plus visible captions in the video.
+Standard synthetic narration and fictional records disclosed in the description.
+
+Submission: https://cerebralvalley.ai/e/meta-ai-developer-hackathon/hackathon/ba79c8bf-0d75-4fc1-af7e-bc8eb9d292d7/edit
+Status: Project Submitted, then reopened as Your Submission.
+Team: Hearth Family Plan.
+The initial name Hearth was already taken. The unique submission name is Hearth Family Plan; the product is still Hearth.
+Registered member: Shivam Gupta, shivam-ai.
+Track: Indie Developer.
+Theme: Build for Your World.
+Final project story, public repository, new video URL, Meta integration and experience fields saved.
+Marketing permission checkbox accepted after explicit at-action approval.
+Optional Muse Code recommendation blank because Muse Code was not used.
+Optional viral-post link blank because no X entry was requested.
+
+App: https://hearth-family-plan.web.app
+Evaluation: https://hearth-family-plan.web.app/evaluation
+Source: https://github.com/shi1720/hearth-family-plan
+
+Remaining limitation: Google popup sign-in did not complete under browser automation. The private anonymous sample, live Meta calls and hosted private file flow passed. Normal-browser Google sign-in still needs manual verification before real-plan use.

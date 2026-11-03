@@ -1,0 +1,30 @@
+TITLE
+Hearth | A clearer path before and after a loss
+
+DESCRIPTION
+After someone dies, families should not have to become detectives while they are grieving.
+
+Hearth helps families prepare ahead, share the right information with trusted people, and follow through after a death. This walkthrough follows Maria and Elena, a fictional family, through preparation, careful handover and practical administration.
+
+Meta Muse Spark 1.3 reads an authorised sample policy. Muse Wonder 1.0 connects records, identifies an unresolved beneficiary discrepancy and proposes a source-linked follow-up. A person reviews the suggestion and turns it into an accountable task. The app keeps permissions, authority evidence, claim stages and money records separate.
+
+The proposed buyer is an advice firm coordinating families over time. The illustrative $18,000 annual service for 250 households and the 300-hour labour break-even are business hypotheses, not validated customer results. Onboarding and professional work are separately scoped.
+
+Try Hearth: https://hearth-family-plan.web.app
+Inspect the evaluation: https://hearth-family-plan.web.app/evaluation
+Public source: https://github.com/shi1720/hearth-family-plan
+
+All family records and external evidence shown are original synthetic examples. No real death, court appointment, claim submission, payment or donation is represented. Hearth does not execute wills, independently verify legal authority, move money or replace qualified professional judgment. The initial workflow is scoped to Florida.
+
+Actual app recordings are edited for pacing. Narration is generated using a standard Google Cloud Chirp voice, without cloning an identifiable person. AI coding assistance is disclosed in the repository. Meta models are used in the application itself.
+
+CHAPTERS
+00:00 When a loss becomes a paperwork project
+00:11 Who Hearth helps
+00:34 Prepare and expose unresolved gaps
+00:50 Meta Muse: from source to accountable task
+01:22 Handover with clear boundaries
+01:34 After a death: report and authority
+01:46 Claims, money records and optional giving
+02:15 Check the rules and model grounding
+02:29 Who buys it and why

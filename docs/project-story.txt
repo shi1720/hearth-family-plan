@@ -1,26 +1,26 @@
-Hearth: a plan your people can use
+Hearth: a clearer path before and after a loss
 
-What inspired the project
-A family can have a signed document and still have an unfinished plan. The original may be hard to find. An old beneficiary record may disagree with the person's current wishes. The person willing to help may not know which records they are allowed to see. Hearth starts with that practical gap between having paperwork and being ready to use it.
+After someone dies, families inherit a second burden: finding the will, understanding who may act, following claims and keeping track of unfinished work. Hearth starts with that gap between having documents and having a plan people can actually use.
 
-What Hearth does
-Hearth connects people, important originals, account and life-policy records, optional giving and evidence-backed next steps. The fictional Maria Ellis scenario makes the problem concrete: a will copy exists, its original is not located, and an old retirement statement names one child while her recorded wish includes both. The application preserves the difference between a wish and the institution's current instruction.
+Hearth is for families preparing ahead, trusted people helping them, and advice firms coordinating those relationships over time. It connects three stages in one private workspace.
 
-Meta Muse Spark 1.3 reads a consented PDF or image. The owner checks the proposed transcription against the original before accepting it. Muse Wonder 1.0 reviews connected records and proposes practical follow-ups with exact source quotes. A person accepts or rejects each proposal. Accepting creates a task with its explanation and evidence, rather than changing a legal instrument.
+Prepare: record people and responsibilities, locate original documents, compare account instructions with current wishes, and identify unresolved questions. A personal wish never silently becomes an institution instruction.
 
-Permissions, execution evidence and state changes are enforced by code. A helper can see permitted care information without receiving private accounts or personal wishes. Reporting a death does not establish a representative's authority. Insurance preparation, submission, approval and actual payment remain separate. Bookkeeping preserves proposed versus confirmed entries and a reserve. Giving remains optional and an intention does not become a donation merely because it was saved.
+Handover: share only the information a permitted role needs. Reporting a death opens review; it does not grant authority. Evidence of death, recipient identity and appointment remains separate, and real-plan authority review requires an authorised professional member.
 
-How it was built
-Shivam Gupta directed and built the original application during this event with substantial AI-assisted research, implementation and testing. The interface uses React and TypeScript. Firebase Hosting provides the clean application address, with Firebase authentication and a dedicated Cloud Run gateway. The gateway verifies identity, encrypts the browser session and household selection, strips untrusted identity headers, and signs the request to the backend. The backend retains D1 records, encrypted R2 attachments, revisions and source provenance. Framework and model dependencies are credited separately in the public repository.
+Follow through: turn reviewed questions into tasks with a responsible person and completion evidence. Prepare claim packets, preserve insurer requirements, distinguish submission from approval and actual receipt, and keep proposed estate entries separate from confirmed records and reserves. Giving remains an optional, separately completed route. Hearth never moves money or replaces qualified professional judgment.
 
-What we learned
-A correct source quote is useful evidence, but it does not prove that an interpretation is correct. An AI proposal also needs an accountable person, the right permissions, an authorised external process and evidence of completion. Material changes must invalidate earlier confirmations. An evaluation should be able to show a failure, so our evaluator tests deliberately weakened rules as well as the normal implementation. The public evaluation view executes synthetic contracts against the actual domain functions and exposes the observed results. Its optional live-model checks are clearly separated from human judgement about legal meaning.
+Meta is central to the workflow. Muse Spark 1.3 reads authorised PDF/image sources and proposes text for a person to check. Muse Wonder 1.0 reviews the connected plan for practical dependencies. In the demonstration, it connects a policy naming Elena with an account summary that says the beneficiary is unknown. Every proposed next step preserves an exact quote and saved input. Human acceptance creates an open task, not a legal finding or executed change.
 
-Challenges
-Incomplete structured responses needed explicit rejection and an appropriate model output budget. A repeated local Worker transport timeout after rejected requests required bounded body draining and unchanged regression tests. Firebase Hosting forwards a single session cookie, so household selection had to live inside the authenticated encrypted session rather than a second browser cookie. These issues were handled as testable failure paths rather than hidden behind optimistic status badges.
+I built Hearth with React and TypeScript, Cloudflare D1 and encrypted R2 storage, Firebase Authentication, a dedicated Cloud Run gateway and Firebase Hosting. The gateway verifies identities and signs upstream requests; the backend enforces role and scope checks. Invitation effects, state changes, audit records and snapshots commit atomically.
 
-Why this can be a business
-The first proposed buyer is an independent advice firm with continuing household coordination work. The proposed annual package is $18,000 for 250 households, with bounded operations and separately scoped professional services. At an assumed $60 per genuinely avoidable staff hour, the fee needs 300 annual hours saved if labour alone justifies it. These are testable business assumptions, not claimed revenue, customers or measured savings. The next commercial step is a priced pilot that counts the full cost of human review and follow-through.
+The hardest challenge was preserving meaning across changes: a new attachment must not inherit old execution evidence, changed beneficiary facts must reopen confirmation, and a losing concurrent request must leave no invitation behind. I learned that an exact quote can still accompany an incorrect inference. The evaluation page therefore separates actual workflow rules from live output-format and grounding checks, and explains the limits of both.
 
-Scope
-The demonstration uses original synthetic records and clearly fictional external confirmations. Initial workflow guidance is scoped to Florida and links to primary sources. Hearth does not execute wills, certify capacity or authority, provide legal representation, submit court or insurance forms, make donations or move money. Real services require qualified people, appropriate engagements and reviewed security and operating arrangements.
+The proposed buyer is an advice firm. The illustrative annual service is $18,000 for 250 households, with bounded work and separately scoped professional services. At $60 per genuinely avoidable staff hour, 300 annual hours saved would cover the annual fee through labour alone. Demand, pricing and savings still require customer validation.
+
+Live product: https://hearth-family-plan.web.app
+Evaluation: https://hearth-family-plan.web.app/evaluation
+
+Testing: choose Explore a private sample for isolated fictional records. Try document intake, source-linked task acceptance, role previews, claim preparation, ledger states, optional giving and the Practice calculator. The shared sample AI allowance is bounded. Google or verified-email sign-in is required for real plans and invitations; automated Google popup completion remains a manual review item.
+
+The original application features were built during this event. The public repository identifies original work, third-party dependencies and AI coding assistance. The demo uses original synthetic records, including clearly fictional external evidence. The initial legal workflow is scoped to Florida. No real death, court appointment, insurance submission, payment or donation is represented by the demo.
