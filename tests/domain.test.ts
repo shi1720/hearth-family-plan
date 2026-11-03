@@ -1,3 +1,4 @@
+import { discardRejectedBody } from "../lib/rejected-body";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -1414,4 +1415,84 @@ test("returned professional financial records and ledger do not alias mutable pr
   view.gifts[0].intention = "Mutated returned gift";
   view.ledger!.openingBalance = "999999.00";
   assert.deepEqual(s, original);
+});
+
+function requestWithBody(body: ReadableStream<Uint8Array>) {
+  return new Request('https://hearth.test/api/workspace', {
+    method: 'POST', body, duplex: 'half',
+  } as RequestInit);
+}
+
+test('rejection cleanup drains a small body through EOF without parsing or cancelling it', async () => {
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode('{"ignored":"rejected data"}'));
+      controller.close();
+    },
+    cancel() { cancelled = true; },
+  });
+  const request = requestWithBody(stream);
+  await discardRejectedBody(request, 300000);
+  assert.equal(request.bodyUsed, true);
+  assert.equal(request.body!.locked, false);
+  assert.equal(cancelled, false, 'reaching EOF is different from cancelling an unread body');
+});
+
+test('rejection cleanup stops at the byte allowance and does not wait for a stalled cancellation', { timeout: 2000 }, async () => {
+  let pulled = 0;
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulled++;
+      controller.enqueue(new Uint8Array(6));
+    },
+    cancel() {
+      cancelled = true;
+      return new Promise<void>(() => {});
+    },
+  }, { highWaterMark: 0 });
+  const request = requestWithBody(stream);
+  await discardRejectedBody(request, 5);
+  assert.equal(pulled, 1, 'an over-limit stream must not be read until EOF');
+  assert.equal(cancelled, true);
+  assert.equal(request.body!.locked, false);
+});
+
+test('errored rejected streams cannot replace the original authorization error with a cleanup failure', async () => {
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) { controller.error(new Error('Synthetic interrupted upload.')); },
+  }, { highWaterMark: 0 });
+  const request = requestWithBody(stream);
+  await assert.doesNotReject(discardRejectedBody(request, 300000));
+  assert.equal(request.body!.locked, false);
+});
+
+test('a stalled rejected upload returns within the cleanup deadline and is cancelled', { timeout: 3000 }, async () => {
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull() { return new Promise<void>(() => {}); },
+    cancel() { cancelled = true; },
+  }, { highWaterMark: 0 });
+  const request = requestWithBody(stream);
+  const started = performance.now();
+  await discardRejectedBody(request, 300000);
+  assert.ok(performance.now() - started < 2500, 'cleanup must not wait indefinitely for an upload');
+  assert.equal(cancelled, true);
+  assert.equal(request.body!.locked, false);
+});
+
+test('zero-byte chunk streams cannot evade the independent rejection read-count limit', async () => {
+  let pulled = 0;
+  let cancelled = false;
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulled++;
+      controller.enqueue(new Uint8Array(0));
+    },
+    cancel() { cancelled = true; },
+  }, { highWaterMark: 0 });
+  await discardRejectedBody(requestWithBody(stream), 300000);
+  assert.equal(pulled, 256);
+  assert.equal(cancelled, true);
 });

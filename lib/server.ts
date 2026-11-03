@@ -1,3 +1,4 @@
+import { discardRejectedBody } from "./rejected-body";
 import { env } from "cloudflare:workers";
 import {
   seed,
@@ -206,7 +207,12 @@ export function checkOrigin(req: Request) {
     });
 }
 export async function body(req: Request, max = 300000) {
-  checkOrigin(req);
+  try {
+    checkOrigin(req);
+  } catch (error) {
+    await discardRejectedBody(req, max);
+    throw error;
+  }
   if (!req.headers.get("content-type")?.includes("application/json"))
     throw new DomainError("Expected a JSON request.");
   const reader = req.body?.getReader();
