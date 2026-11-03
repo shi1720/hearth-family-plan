@@ -1,0 +1,32 @@
+name: Verify Hearth
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Create ephemeral local encryption secret
+        run: node -e "require('fs').writeFileSync('.dev.vars', 'KEY_ENCRYPTION_SECRET='+require('crypto').randomBytes(32).toString('base64')+'\nLOCAL_DEMO_AUTH=0\n')"
+      - name: Apply local schema
+        run: |
+          node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_smart_prism.sql
+          node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_fantastic_maggott.sql
+      - name: Verify downstream API and persistence
+        run: |
+          node scripts/start-api-test.mjs > /tmp/hearth-test-worker.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl -s http://127.0.0.1:5176/api/workspace | head -c 200 | grep -q 'Sign in'; then break; fi
+            sleep 1
+          done
+          npm run test:api

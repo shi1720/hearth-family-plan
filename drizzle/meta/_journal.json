@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1793691781923,
+      "tag": "0000_smart_prism",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793692631601,
+      "tag": "0001_fantastic_maggott",
+      "breakpoints": true
+    }
+  ]
+}

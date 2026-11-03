@@ -1,0 +1,83 @@
+HEARTH — SUBMISSION COPY
+Prepared for Shivam Gupta | Meta Global AI Developer Hackathon
+Copy only the fields requested by the actual submission form. Confirm deployed URLs, repository visibility and final test results before submitting. No application, customer, legal-review or deployment status is invented below.
+
+PROJECT NAME
+Hearth
+
+ONE-LINE DESCRIPTION
+A private family workspace that turns scattered estate and household records into permission-aware next steps, evidence-backed handovers, and a clear record of what remains unfinished.
+
+SHORT PITCH
+Having a will is not the same as having a plan people can use. Hearth connects documents, originals, account instructions, helpers, insurance claims and optional giving—then shows what is recorded, what needs confirmation and what has actually been completed. Meta models help read and review; people retain consequential decisions.
+
+PROBLEM
+Families can have signed documents and still face practical failures: nobody can locate the original will; a retirement statement names a different beneficiary from the person's present wish; an old employer insurance certificate is mistaken for current cover; a nominated helper is confused with a legally appointed representative. Advice-firm staff often coordinate these records across clients, relatives, institutions and professionals.
+
+The problem is unfinished and unclear handoffs. Another document summary or generic checklist does not establish that an institution accepted a change, a claimant submitted the right evidence, or money was received. Hearth makes those distinctions visible without pretending software determines inheritance or replaces professional judgment.
+
+WHAT WE BUILT
+A working family-plan application with sign-in, persistent household records, private file attachments, explicit sharing, reviewed AI intake, practical tasks, claim preparation records and an estate money ledger. Its initial legal workflow is scoped to Florida; it does not claim jurisdiction-independent estate planning.
+
+A fictional demonstration follows Maria Ellis. Her original will's location needs confirmation, an old retirement statement names only Elena while Maria has a different recorded wish, and an employer policy needs a current coverage check. The owner can upload an example PDF, consent to model processing, check the transcription, inspect source-quoted proposals, and accept useful follow-ups. The institution's response is recorded as evidence; the app does not change beneficiary instructions itself.
+
+A helper permission preview makes permitted care information findable while withholding private financial records and personal wishes. Death reporting is separate from a recorded authority review. Insurance claim records preserve the claimant's separate authority, insurer requirements, submission evidence, requests, decisions and actual payment evidence. A preparation packet can be exported for authorised review; it is not an official insurer form and Hearth does not submit it.
+
+The estate ledger separately tracks confirmed funds, proposed entries, expenses, distributions and a recorded reserve using decimal-safe cents arithmetic. A mathematical balance is not legal permission to distribute. Charitable wishes retain distinct intention, review, execution and receipt states; saving a wish never means a donation was received.
+
+META AI USE
+Muse Spark 1.3 supports consented PDF/image attachment reading and source-text intake. The user checks the transcription against the stored original before accepting it for analysis. Model uncertainty remains visible; accepted transcription does not certify execution or legal validity.
+
+Muse Wonder 1.0 reviews connected plan records for practical inconsistencies and handover gaps. The application validates structured proposal responses and rejects source quotes that are not exact excerpts of the submitted input. A person can accept or dismiss a proposal; acceptance creates a reviewable task rather than modifying a legal instrument, beneficiary designation or payment instruction.
+
+Model calls run on the server with bounded usage, timeouts and explicit user consent. Actual returned proposals, model identifiers and source records should be shown in the demo. No model benchmarks, accuracy figures or universally complete extraction are claimed.
+
+WHY THIS GOES BEYOND BASIC RAG
+The demonstrated result is a stateful workflow: uploaded evidence -> checked transcription -> cross-record question -> accepted source-linked task -> recorded institution response -> updated confirmation state. Material record changes can invalidate old confirmations rather than leaving an optimistic badge in place. Permission rules and business transitions are enforced by application code; the model does not decide who may see a private record or label an external action completed.
+
+The claims and ledger workflows also distinguish preparation, submission, approval, receipt and proposed versus confirmed money records. These controls remain usable when the model is unavailable. The value is reliable coordination and visible unfinished work, not a chat answer about a will.
+
+TECHNICAL DEPTH
+- TypeScript application built with React/Vinext and Cloudflare Worker runtime.
+- Durable household storage in D1 and encrypted private attachments in R2.
+- Authenticated household membership plus server-side role, access and stage checks; permission-filtered exports and file downloads.
+- Invitation acceptance tied to the invited signed-in email, with owner access controls and revocation.
+- AES-GCM encryption for stored attachment bytes and owner-scoped API credentials; secrets excluded from browser responses and plan exports.
+- Optimistic revision checks to reject stale writes, retained plan revisions and a SHA-256 linked activity record.
+- Validated records and evidence requirements for claimed completion, separate death/authority states, and decimal-safe estate calculations.
+- Structured Meta responses, exact-quote checks, reviewed transcription, usage limits and failure paths that preserve existing records.
+
+These are implementation features, not claims of independent security certification, professional qualification verification or a legally tamper-proof record. Report the final executed validation results separately after the release checks finish.
+
+BUSINESS MODEL AND VALUE
+Initial buyer: an independent financial-advice firm with recurring household coordination work, a client-service team and existing relationships with qualified estate professionals. It pays to reduce chasing and unfinished arrangements across a cohort, while each family controls its private information. Families retain portable records rather than being locked to the sponsoring adviser.
+
+Pricing hypothesis: $18,000 annually for a bounded readiness service covering 250 households, equivalent to $72 per household per year. Proposed cohort onboarding is $15,000; separately scoped after-death administrative work starts at $3,000. These are proposed prices, not booked revenue. Legal representation, tax advice, execution providers, complex assets and substantial professional work require separate engagements and funding.
+
+At an assumed $60 of genuinely avoidable staff cost per hour, the annual readiness fee requires 300 avoided hours across the cohort—1.2 hours per household—if labour savings alone justify purchase. The app exposes editable assumptions rather than presenting this as measured savings. Total delivery effort must include vendor operations and professional time; expensive exceptions cannot be hidden behind low model-token costs.
+
+Validation status: no paying customers, validated acquisition costs or measured customer savings are claimed. The next commercial test is a costed pilot with an advice firm using consenting households and its existing professionals. Measure confirmed arrangements, family effort, staff time, unresolved tasks and complete-cycle cost against the firm's current tools and providers. Established estate-planning and administration competitors already exist; superior execution and distribution must be earned.
+
+THEME AND JUDGING FIT
+Build for Your World: a practical, recognisable family and professional coordination problem.
+
+Technical ambition: meaningful multimodal document intake and cross-record reasoning combined with deterministic permissions, versioning and evidence-backed transitions.
+
+Working demonstration: show the consequence of a beneficiary discrepancy, inspect the actual model's source, accept a task, record confirmation, preview limited access and prepare a claim packet without manufacturing an external action.
+
+No specific legal-AI bonus award or official numerical score is claimed. Select the entrant's eligible track using the actual accepted registration and current official rules.
+
+ORIGINAL CONTRIBUTIONS AND BUILD CREDIT
+Shivam Gupta selected and directed the product, set its commercial and user requirements, and is the project builder/representative. The application, product-specific data model, family workflow, access rules, evidence states, Meta integration, original fictional demo materials and submission package were developed for this hackathon with substantial Codex AI assistance. Do not represent the work as unaided or invent particular manual coding contributions.
+
+Existing framework dependencies, infrastructure, source references and model services are credited in the repository; they are not claimed as original inventions. The demonstration should highlight only functionality actually created during this event. The previous ReleaseProof direction is not part of the Hearth submission.
+
+LIMITATIONS — INCLUDE WHERE THE FORM ALLOWS
+Hearth is software for organising and tracking permitted work. It does not act as a law firm, personal representative, bank, insurer, notary, tax adviser or qualified electronic-will custodian. It does not execute wills, verify legal capacity, decide inheritance disputes, independently certify identities or legal authority, submit court/insurance forms, discover every policy, guarantee cover, make donations or move estate money.
+
+A recorded professional role is a membership role, not an independent check of professional qualifications. A recorded authority review captures evidence and responsibility; it is not a court or platform certification. All people, institutions and external confirmations in the main demo are fictional and labeled accordingly.
+
+A live managed professional service requires actual local providers, clear engagements, staffed operating scope, reviewed identity/authority procedures, security/privacy assessment and continuity arrangements. Those partnerships and approvals are not claimed complete by presenting a working application. Charitable comparison, tax treatment, complex estates, international legal delivery and universal insurer integrations are not automated capabilities of this release.
+
+FINAL SUBMISSION CHECK
+Use the actual verified application and public repository URLs. Attach the accessible three-minute video. List every required team member accurately. Confirm only new hackathon work is highlighted, secrets/private records are absent from public source, and final validation results support every operational claim. Do not submit an invented customer testimonial or measured benefit.

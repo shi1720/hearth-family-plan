@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {spawn} from 'node:child_process';
+const source=path.resolve('dist/server/wrangler.json');
+if(!fs.existsSync(source))throw new Error('Run npm run build first.');
+if(!fs.existsSync('.dev.vars'))throw new Error('Create .dev.vars with KEY_ENCRYPTION_SECRET first.');
+const config=JSON.parse(fs.readFileSync(source,'utf8'));config.main=path.resolve('dist/server/index.js');config.assets.directory=path.resolve('dist/client');config.vars={...config.vars,LOCAL_DEMO_AUTH:'0'};
+fs.writeFileSync('.test-wrangler.json',JSON.stringify(config,null,2));
+const child=spawn(process.execPath,['--import','./scripts/sites-env.mjs','./node_modules/wrangler/bin/wrangler.js','dev','--config','.test-wrangler.json','--local','--persist-to','.wrangler/state','--ip','127.0.0.1','--inspector-port','0','--port','5176','--var','LOCAL_DEMO_AUTH:0','--log-level','warn'],{stdio:'inherit'});
+process.on('SIGINT',()=>child.kill('SIGINT'));process.on('SIGTERM',()=>child.kill('SIGTERM'));child.on('exit',c=>process.exit(c??1));
