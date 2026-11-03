@@ -6,7 +6,7 @@ Built by **Shivam Gupta**, with AI-assisted research, implementation and testing
 
 ## What works
 
-- Private, persistent household workspaces with hosted Sign in with ChatGPT.
+- Private, persistent household workspaces and implemented hosted Sign in with ChatGPT. Local downstream access/persistence checks pass; the hosted end-to-end owner journey remains unverified because the browser account differs from the current owner-only Site audience.
 - Living planning, permission-based helping, and after-death administration paths.
 - People and roles, document originals and execution evidence, account ownership/beneficiary records, insurance policies, and optional giving.
 - Encrypted document storage with authorised download; PDF/image reading through Meta Muse Spark 1.3, reviewed transcription, and source-quoted intake proposals.

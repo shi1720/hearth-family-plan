@@ -20,7 +20,7 @@ If annual operations take one hour per household, cost rises $7,500 and contribu
 
 A $3,000 administration case with 20 operator hours at $40, one oversight hour at $160 and $150 other cost contributes $1,890 (63%) before overhead. At 60 operator hours, only $290 remains. Legal/tax representation, court fees and complex property work remain separate.
 
-Inference is metered, not assumed free. Standard-mode Muse Spark and Wonder incur token charges; file processing and lengthy reasoning can change cost. Hearth caps hourly calls and output sizes and records model usage alongside saved inputs. Measure inference, all human time, storage, security and support before setting commercial quotas. The seeded firm/value figures are illustrative, not a live portfolio.
+Inference is metered, not assumed free. Standard-mode Muse Spark and Wonder incur token charges; file processing and lengthy reasoning can change cost. Hearth caps hourly calls and output sizes and records returned usage for source analysis and cross-record review alongside saved inputs; PDF transcription currently retains its model and text but not returned token usage. Measure inference, all human time, storage, security and support before setting commercial quotas. The seeded firm/value figures are illustrative, not a live portfolio.
 
 ## Market entry and competition
 
