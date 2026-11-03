@@ -17,7 +17,11 @@ const owner = {
     email: `helper-${suffix}@hearth.test`,
   },
   other = { id: `test-other-${suffix}`, email: `other-${suffix}@hearth.test` },
-  prof = { id: `test-prof-${suffix}`, email: `prof-${suffix}@hearth.test` };
+  prof = { id: `test-prof-${suffix}`, email: `prof-${suffix}@hearth.test` },
+  adviser = {
+    id: `test-adviser-${suffix}`,
+    email: `adviser-${suffix}@hearth.test`,
+  };
 let passed = 0;
 function headers(u, extra = {}) {
   return {
@@ -54,6 +58,12 @@ function check(name, fn) {
 }
 let x = await request("/api/workspace");
 check("anonymous API access denied", () => assert.equal(x.r.status, 401));
+const anonymousBriefResponse = await fetch(base + "/api/review-brief");
+const anonymousBriefText = await anonymousBriefResponse.text();
+check("anonymous visitors cannot download a household review brief", () => {
+  assert.equal(anonymousBriefResponse.status, 401);
+  assert.ok(!anonymousBriefText.includes("Maria Ellis"));
+});
 x = await request("/api/workspace", owner);
 check("owner receives private fictional workspace", () => {
   assert.equal(x.r.status, 200);
@@ -70,6 +80,47 @@ async function mutate(action, p = {}) {
   if (q.r.ok) state = q.j;
   return q;
 }
+const privateBriefMarker = `PRIVATE-BRIEF-${suffix}`;
+x = await mutate("save-document", {
+  document: {
+    title: `Private review note ${suffix}`,
+    kind: "letter",
+    status: "draft",
+    originalLocation: "",
+    executionEvidence: "",
+    notes: privateBriefMarker,
+    visibility: "private",
+  },
+});
+assert.equal(x.r.status, 200, "prepare a household-specific privacy marker");
+const privateAccount = state.state.accounts.find(
+  (a) => a.visibility === "private",
+);
+const privateGift = state.state.gifts.find((g) => g.visibility === "private");
+const ownerBriefResponse = await fetch(base + "/api/review-brief", {
+  headers: headers(owner),
+});
+const ownerBrief = await ownerBriefResponse.text();
+check(
+  "owner can download a factual review brief with private facts and execution limits",
+  () => {
+    assert.equal(ownerBriefResponse.status, 200);
+    assert.match(
+      ownerBriefResponse.headers.get("content-type"),
+      /^text\/plain/,
+    );
+    assert.match(
+      ownerBriefResponse.headers.get("content-disposition"),
+      /attachment.*professional-review-brief/,
+    );
+    assert.equal(ownerBriefResponse.headers.get("cache-control"), "no-store");
+    assert.ok(ownerBrief.includes(privateBriefMarker));
+    assert.ok(ownerBrief.includes(privateAccount.name));
+    assert.ok(ownerBrief.includes(privateGift.intention));
+    assert.ok(ownerBrief.includes("FICTIONAL DEMONSTRATION"));
+    assert.ok(ownerBrief.includes("does not certify validity"));
+  },
+);
 x = await request("/api/workspace", owner, {
   action: "save-preferences",
   revision: 0,
@@ -116,6 +167,67 @@ check("helper sees only permission-filtered emergency records", () => {
   assert.ok(x.j.state.documents.every((d) => d.kind === "care"));
   assert.deepEqual(x.j.state.accounts, []);
 });
+const helperBriefResponse = await fetch(
+  base + "/api/review-brief?previewRole=owner",
+  {
+    headers: headers(helper, { cookie }),
+  },
+);
+const helperBrief = await helperBriefResponse.text();
+check(
+  "emergency helper brief includes shared care and cannot escalate through a query parameter",
+  () => {
+    assert.equal(helperBriefResponse.status, 200);
+    assert.ok(helperBrief.includes("Oliver takes a morning walk"));
+    assert.ok(
+      helperBrief.includes("Permission-filtered view: helper / emergency"),
+    );
+    assert.ok(!helperBrief.includes(privateBriefMarker));
+    assert.ok(!helperBrief.includes(privateAccount.name));
+    assert.ok(!helperBrief.includes(privateGift.intention));
+    assert.ok(!helperBrief.includes("Retirement account"));
+  },
+);
+x = await mutate("invite", {
+  email: adviser.email,
+  role: "adviser",
+  access: "administration",
+});
+assert.equal(
+  x.r.status,
+  200,
+  "create a real adviser membership for brief authorization",
+);
+const adviserToken = new URL(x.j.invitation.url).searchParams.get("invite");
+const acceptedAdviser = await request("/api/invitations", adviser, {
+  token: adviserToken,
+});
+assert.equal(acceptedAdviser.r.status, 200);
+const adviserCookie = acceptedAdviser.r.headers.get("set-cookie").split(";")[0];
+const adviserBriefResponse = await fetch(
+  base + "/api/review-brief?previewRole=owner",
+  {
+    headers: headers(adviser, { cookie: adviserCookie }),
+  },
+);
+const adviserBrief = await adviserBriefResponse.text();
+check(
+  "invited adviser brief omits private records, care notes and task details",
+  () => {
+    assert.equal(adviserBriefResponse.status, 200);
+    assert.ok(adviserBrief.includes("Person: Maria Ellis"));
+    assert.ok(
+      adviserBrief.includes(
+        "Permission-filtered view: adviser / administration",
+      ),
+    );
+    assert.ok(!adviserBrief.includes(privateBriefMarker));
+    assert.ok(!adviserBrief.includes(privateAccount.name));
+    assert.ok(!adviserBrief.includes(privateGift.intention));
+    assert.ok(!adviserBrief.includes("Oliver takes a morning walk"));
+    assert.ok(!adviserBrief.includes("Locate the original signed will"));
+  },
+);
 x = await request(
   "/api/workspace",
   helper,

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "donorschoose",
+    "name": "DonorsChoose",
+    "ein": "13-4129457",
+    "geography": "United States public schools.",
+    "approach": "Donors select teacher-requested classroom projects; DonorsChoose purchases and delivers resources rather than giving teachers cash.",
+    "reportedEvidence": "Charity-reported project details, annual reviews, financial statements and tax filings.",
+    "sourceUrl": "https://www.donorschoose.org/impact",
+    "reportUrl": "https://www.donorschoose.org/about/finance.html",
+    "giveUrl": "https://www.donorschoose.org/donors/search.html",
+    "checkedAt": "2026-11-03",
+    "limitations": "Not independently evaluated or ranked here. Confirm current legal recipient and IRS status before implementing a gift."
+  },
+  {
+    "id": "first-book",
+    "name": "First Book",
+    "ein": "52-1779606",
+    "geography": "North America; this profile identifies the US organisation.",
+    "approach": "Provides free or low-cost books and educational resources through educators serving children in low-income communities.",
+    "reportedEvidence": "Charity-reported impact reports, audited financial statements and Form 990 filings.",
+    "sourceUrl": "https://firstbook.org/",
+    "reportUrl": "https://firstbook.org/us/about/financials",
+    "giveUrl": "https://firstbook.donorsupport.co/-/XBYEYJPR",
+    "checkedAt": "2026-11-03",
+    "limitations": "Not independently evaluated or ranked here. Confirm current legal recipient and IRS status before implementing a gift."
+  },
+  {
+    "id": "room-to-read",
+    "name": "Room to Read",
+    "ein": "91-2003533",
+    "geography": "International programmes; this profile identifies the US organisation.",
+    "approach": "Supports literacy, local-language books, teacher development and girls’ education with communities and education partners.",
+    "reportedEvidence": "Charity-reported annual reports, audited financial statements and Form 990 filings.",
+    "sourceUrl": "https://www.roomtoread.org/about-us/frequently-asked-questions/",
+    "reportUrl": "https://www.roomtoread.org/about-us/financials/",
+    "giveUrl": "https://www.roomtoread.org/donate/",
+    "checkedAt": "2026-11-03",
+    "limitations": "Not independently evaluated or ranked here. Confirm current legal recipient and IRS status before implementing a gift."
+  }
+]

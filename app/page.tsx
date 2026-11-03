@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import charityProfiles from "@/lib/charity-profiles.json";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -371,6 +372,7 @@ export default function Hearth() {
     [busy, setBusy] = useState("load"),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
+    [authRequired, setAuthRequired] = useState(false),
     [modal, setModal] = useState(""),
     [form, setForm] = useState<Item>({}),
     [mobile, setMobile] = useState(false),
@@ -432,6 +434,15 @@ export default function Hearth() {
       previous?.focus();
     };
   }, [modal]);
+  function showSignIn() {
+    setAuthRequired(true);
+    setData(null);
+    setOwnerAccess(false);
+    setError("");
+    setNotice("");
+    setModal("");
+    setInvite(null);
+  }
   async function load(roleOverride?: string, accessOverride?: string) {
     const selected = roleOverride || previewRole,
       access = accessOverride || previewAccess;
@@ -444,8 +455,13 @@ export default function Hearth() {
           ? "/api/workspace"
           : `/api/workspace?previewRole=${encodeURIComponent(selected)}&access=${encodeURIComponent(access)}`;
       const r = await fetch(path, { cache: "no-store" });
+      if (r.status === 401) {
+        showSignIn();
+        return;
+      }
       const j: any = await r.json();
       if (!r.ok) throw Error(j.error || "Your plan could not be opened.");
+      setAuthRequired(false);
       setData(j);
       if (selected === "owner") setOwnerAccess(j.user?.role === "owner");
     } catch (e) {
@@ -461,6 +477,10 @@ export default function Hearth() {
       setInviteToken(token);
       fetch(`/api/invitations?token=${encodeURIComponent(token)}`)
         .then(async (r) => {
+          if (r.status === 401) {
+            showSignIn();
+            return;
+          }
           const j: any = await r.json();
           if (!r.ok) throw Error(j.error || "Invitation unavailable");
           setInvite(j);
@@ -488,6 +508,10 @@ export default function Hearth() {
           ...payload,
         }),
       });
+      if (r.status === 401) {
+        showSignIn();
+        return false;
+      }
       const j: any = await r.json();
       if (!r.ok) throw Error(j.error || "This change could not be saved.");
       setData(j);
@@ -502,6 +526,7 @@ export default function Hearth() {
     }
   }
   function open(name: string, value: Item = {}) {
+    if (!data) return;
     const d =
       name === "read-doc" ? documents.find((d) => d.id === value.id) : null;
     setForm({
@@ -810,6 +835,7 @@ export default function Hearth() {
               className={`nav-item ${view === name ? "active" : ""}`}
               aria-current={view === name ? "page" : undefined}
               onClick={() => navigate(name)}
+              disabled={!data}
             >
               <Icon size={17} />
               <span>{name}</span>
@@ -826,22 +852,36 @@ export default function Hearth() {
             <br />
             everything out today.
           </p>
-          <button onClick={() => open("preferences", state.preferences)}>
+          <button
+            disabled={!data}
+            onClick={() => open("preferences", state.preferences)}
+          >
             Set your pace <ArrowRight size={12} />
           </button>
         </div>
         <div className="sidebar-bottom">
           <button
             className="privacy-link"
+            disabled={!data}
             onClick={() => open("preferences", state.preferences)}
           >
             <LockKeyhole size={13} /> Private, and in your control
           </button>
-          <button className="user-profile" onClick={() => open("provider")}>
-            <span className="avatar">{(data?.user?.name || "S")[0]}</span>
+          <button
+            className="user-profile"
+            disabled={!data}
+            onClick={() => open("provider")}
+          >
+            <span className="avatar">{(data?.user?.name || "H")[0]}</span>
             <span>
-              <strong>{data?.user?.name || "Your workspace"}</strong>
-              <small>{role === "owner" ? "Plan owner" : role}</small>
+              <strong>{data?.user?.name || "Private family workspace"}</strong>
+              <small>
+                {!data
+                  ? "Sign in to begin"
+                  : role === "owner"
+                    ? "Plan owner"
+                    : role}
+              </small>
             </span>
             <Settings2 size={15} />
           </button>
@@ -869,23 +909,28 @@ export default function Hearth() {
               className="icon-button"
               onClick={() => load()}
               aria-label="Refresh plan"
-              disabled={!!busy}
+              disabled={!!busy || !data}
             >
               <Clock3 size={17} />
             </button>
-            <a
-              className="export-link"
-              href={
-                previewRole === "owner"
-                  ? "/api/export"
-                  : `/api/export?previewRole=${previewRole}&access=${previewAccess}`
-              }
-            >
-              <ArrowDownToLine size={14} /> Export plan
-            </a>
+            {data && (
+              <a
+                className="export-link"
+                href={
+                  previewRole === "owner"
+                    ? "/api/export"
+                    : `/api/export?previewRole=${previewRole}&access=${previewAccess}`
+                }
+              >
+                <ArrowDownToLine size={14} /> Export plan
+              </a>
+            )}
           </div>
         </header>
-        <main id="main" className="content">
+        <main
+          id="main"
+          className={`content ${authRequired && !data ? "signed-out-content" : ""}`}
+        >
           {ownerAccess && (
             <div className="role-preview">
               <div>
@@ -1004,28 +1049,138 @@ export default function Hearth() {
             </Panel>
           )}
           {!data ? (
-            <div className="loading-state">
-              <span className="brand-icon">
-                <Heart size={27} />
-              </span>
-              <h1>
-                {busy
-                  ? "A little clarity is on its way."
-                  : "Let’s reconnect to your plan."}
-              </h1>
-              <p>
-                {busy
-                  ? "Opening your private family workspace…"
-                  : "Your records could not be loaded. Please retry or sign in."}
-              </p>
-              {busy ? (
-                <LoaderCircle className="spin" size={23} />
-              ) : (
-                <Button onClick={() => load()}>
-                  Try again <ArrowRight size={15} />
-                </Button>
-              )}
-            </div>
+            authRequired ? (
+              <section
+                className="signed-out-welcome"
+                aria-labelledby="welcome-title"
+              >
+                <div className="welcome-private">
+                  <LockKeyhole size={13} /> PRIVATE FAMILY PLANNING
+                </div>
+                <div className="signed-out-hero">
+                  <div className="signed-out-copy">
+                    <p className="eyebrow">
+                      A LITTLE CLARITY FOR THE PEOPLE YOU LOVE
+                    </p>
+                    <h1 id="welcome-title">
+                      A plan your
+                      <br />
+                      people can use.
+                    </h1>
+                    <p>
+                      Bring your wishes, important records, and trusted people
+                      into one thoughtful place. Start small. Keep what matters
+                      findable. Stay in control of who can see it.
+                    </p>
+                    <a
+                      className="button sign-in-button"
+                      href={`/signin-with-chatgpt?return_to=${encodeURIComponent(inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : "/")}`}
+                      target="_top"
+                    >
+                      Sign in with ChatGPT <ArrowRight size={16} />
+                    </a>
+                    <span className="sign-in-note">
+                      <ShieldCheck size={13} /> Your private records load only
+                      after you sign in.
+                    </span>
+                  </div>
+                  <div className="signed-out-art" aria-hidden="true">
+                    <div className="welcome-orbit" />
+                    <div className="hearth-illustration">
+                      <div className="sun" />
+                      <div className="arch arch-back" />
+                      <div className="arch arch-front" />
+                      <div className="vase">
+                        <i />
+                        <i />
+                        <i />
+                        <i />
+                      </div>
+                      <div className="floor-line" />
+                      <div className="book book-one" />
+                      <div className="book book-two" />
+                      <span className="illustration-dot" />
+                    </div>
+                    <span className="welcome-heart">
+                      <Heart size={28} strokeWidth={1.2} />
+                    </span>
+                  </div>
+                </div>
+                <div className="welcome-benefits">
+                  <article>
+                    <span>
+                      <FileText size={20} />
+                    </span>
+                    <h2>
+                      Make the important
+                      <br />
+                      things findable.
+                    </h2>
+                    <p>
+                      Keep document locations, account instructions, and
+                      practical next steps together.
+                    </p>
+                  </article>
+                  <article>
+                    <span>
+                      <Users size={20} />
+                    </span>
+                    <h2>
+                      A helping hand.
+                      <br />
+                      Clear boundaries.
+                    </h2>
+                    <p>
+                      Give trusted people only the information their chosen role
+                      needs.
+                    </p>
+                  </article>
+                  <article>
+                    <span>
+                      <Leaf size={20} />
+                    </span>
+                    <h2>
+                      Your wishes.
+                      <br />
+                      Your pace.
+                    </h2>
+                    <p>
+                      Prepare for care, inheritance, and optional giving without
+                      having to decide everything today.
+                    </p>
+                  </article>
+                </div>
+                <div className="welcome-footnote">
+                  <span>Hearth · Built by Shivam Gupta with AI assistance</span>
+                  <span>
+                    Thoughtful preparation. Professional judgment where needed.
+                  </span>
+                </div>
+              </section>
+            ) : (
+              <div className="loading-state">
+                <span className="brand-icon">
+                  <Heart size={27} />
+                </span>
+                <h1>
+                  {busy
+                    ? "A little clarity is on its way."
+                    : "Let’s reconnect to your plan."}
+                </h1>
+                <p>
+                  {busy
+                    ? "Opening your private family workspace…"
+                    : "Your records could not be loaded. Please retry or sign in."}
+                </p>
+                {busy ? (
+                  <LoaderCircle className="spin" size={23} />
+                ) : (
+                  <Button onClick={() => load()}>
+                    Try again <ArrowRight size={15} />
+                  </Button>
+                )}
+              </div>
+            )
           ) : (
             <>
               {view === "Home" ? (
@@ -1842,6 +1997,30 @@ export default function Hearth() {
                         witnessing, capacity, or that no later document exists
                         elsewhere.
                       </p>
+                      <div className="professional-brief-links">
+                        {canReview && (
+                          <a
+                            className="button secondary"
+                            href="/api/review-brief"
+                          >
+                            <FileText size={14} /> Prepare professional review
+                            brief
+                          </a>
+                        )}
+                        <a
+                          className="text-button"
+                          href="https://www.floridabar.org/public/lrs/"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Find qualified legal help <ArrowUpRight size={13} />
+                        </a>
+                        <small>
+                          The brief is a factual draft for your review. Nothing
+                          is sent. The Florida Bar referral service is
+                          independent of Hearth.
+                        </small>
+                      </div>
                     </Panel>
                     <Panel title="Your original matters">
                       <p className="muted">
@@ -2128,6 +2307,21 @@ export default function Hearth() {
                       <Heart size={31} strokeWidth={1.1} />
                     </div>
                   </div>
+                  <CharityExplorer
+                    profiles={charityProfiles}
+                    canSave={owner}
+                    onSave={(profile) =>
+                      open("gift", {
+                        recipient: profile.name,
+                        registrationId: profile.ein,
+                        url: profile.sourceUrl,
+                        cause: "Education",
+                        intention: "",
+                        route: "undecided",
+                        status: "intention",
+                      })
+                    }
+                  />
                   <div className="gifts-grid">
                     {gifts.map((g) => (
                       <article className="gift-card" key={g.id}>
@@ -2933,7 +3127,10 @@ export default function Hearth() {
                   <Heart size={12} /> Hearth · Built by Shivam Gupta with AI
                   assistance
                 </span>
-                <button onClick={() => open("preferences", state.preferences)}>
+                <button
+                  disabled={!data}
+                  onClick={() => open("preferences", state.preferences)}
+                >
                   Your pace & privacy
                 </button>
                 {owner && (
@@ -4430,6 +4627,172 @@ function ProposalReview({
           <ArrowRight size={14} />
         </button>
       )}
+    </Panel>
+  );
+}
+
+function CharityExplorer({
+  profiles,
+  canSave,
+  onSave,
+}: {
+  profiles: Item[];
+  canSave: boolean;
+  onSave: (profile: Item) => void;
+}) {
+  const [selected, setSelected] = useState<string[]>([]),
+    [comparing, setComparing] = useState(false);
+  const chosen = profiles.filter((p) => selected.includes(p.id));
+  function toggle(id: string) {
+    const next = selected.includes(id)
+      ? selected.filter((s) => s !== id)
+      : [...selected, id];
+    setSelected(next);
+    if (next.length < 2) setComparing(false);
+  }
+  return (
+    <Panel
+      title="Explore education causes"
+      eyebrow="A SMALL SET OF SOURCES — NOT A RANKING"
+      className="charity-explorer"
+    >
+      <p className="muted charity-explorer-intro">
+        Compare the places and approaches that matter to you. These three
+        profiles use official organisation sources; they are not a complete
+        charity directory. You can save a different recipient at any time.
+      </p>
+      <div className="charity-profile-grid">
+        {profiles.map((profile) => (
+          <article className="charity-profile" key={profile.id}>
+            <div className="charity-profile-top">
+              <span>
+                <Leaf size={18} />
+              </span>
+              <label className="compare-check">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(profile.id)}
+                  onChange={() => toggle(profile.id)}
+                />
+                <span>
+                  Compare<span className="sr-only"> {profile.name}</span>
+                </span>
+              </label>
+            </div>
+            <h3>{profile.name}</h3>
+            <p className="charity-geography">{profile.geography}</p>
+            <p className="charity-approach">{profile.approach}</p>
+            <div className="charity-reported">
+              <span>CHARITY-REPORTED EVIDENCE</span>
+              <p>{profile.reportedEvidence}</p>
+              <a href={profile.reportUrl} target="_blank" rel="noreferrer">
+                Read official reports <ArrowUpRight size={12} />
+              </a>
+            </div>
+            <div className="charity-source-meta">
+              <span>US EIN {profile.ein}</span>
+              <span>Checked {profile.checkedAt}</span>
+            </div>
+            <Button
+              secondary
+              disabled={!canSave}
+              onClick={() => onSave(profile)}
+            >
+              <Plus size={13} /> Save this intention
+            </Button>
+            <div className="charity-external-links">
+              <a href={profile.sourceUrl} target="_blank" rel="noreferrer">
+                Visit recipient website <ArrowUpRight size={11} />
+              </a>
+              <a href={profile.giveUrl} target="_blank" rel="noreferrer">
+                Visit official giving route <ArrowUpRight size={11} />
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="charity-compare-controls">
+        <span>
+          {selected.length
+            ? `${selected.length} selected for comparison`
+            : "Select two or three to compare their approach."}
+        </span>
+        <Button
+          secondary
+          disabled={selected.length < 2}
+          onClick={() => setComparing((v) => !v)}
+        >
+          {comparing
+            ? "Close comparison"
+            : `Compare selected${selected.length ? ` (${selected.length})` : ""}`}{" "}
+          <ArrowRight size={13} />
+        </Button>
+      </div>
+      {comparing && chosen.length >= 2 && (
+        <div className="table-scroll charity-comparison">
+          <table>
+            <caption>
+              Education organisation comparison. Factual source summaries,
+              without ratings.
+            </caption>
+            <thead>
+              <tr>
+                <th>What to compare</th>
+                {chosen.map((p) => (
+                  <th key={p.id}>{p.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Geography</th>
+                {chosen.map((p) => (
+                  <td key={p.id}>{p.geography}</td>
+                ))}
+              </tr>
+              <tr>
+                <th scope="row">Approach</th>
+                {chosen.map((p) => (
+                  <td key={p.id}>{p.approach}</td>
+                ))}
+              </tr>
+              <tr>
+                <th scope="row">Reported evidence</th>
+                {chosen.map((p) => (
+                  <td key={p.id}>
+                    {p.reportedEvidence}
+                    <a href={p.reportUrl} target="_blank" rel="noreferrer">
+                      Inspect official reports <ArrowUpRight size={11} />
+                    </a>
+                  </td>
+                ))}
+              </tr>
+              <tr>
+                <th scope="row">Source date</th>
+                {chosen.map((p) => (
+                  <td key={p.id}>{p.checkedAt}</td>
+                ))}
+              </tr>
+              <tr>
+                <th scope="row">Limits</th>
+                {chosen.map((p) => (
+                  <td key={p.id}>{p.limitations}</td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div className="charity-explorer-limits">
+        <ShieldCheck size={15} />
+        <p>
+          Profiles are not sponsored or ranked. Charity-reported information is
+          not independent effectiveness verification. Confirm the current legal
+          recipient and applicable status before implementing a gift. Saving an
+          intention is not a donation or a legal commitment; external giving
+          routes leave Hearth and no payment is made here.
+        </p>
+      </div>
     </Panel>
   );
 }

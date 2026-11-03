@@ -16,6 +16,8 @@ Built by **Shivam Gupta**, with AI-assisted research, implementation and testing
 - Death reports separated from evidence of death, recipient identity and representative authority. Real-plan authority review requires an administration-scoped invited professional.
 - Exact-cent estate bookkeeping, proposed versus confirmed entries, reserves, overdraw protection, and evidence requirements. Hearth never moves funds.
 - SHA-256-linked activity history, prior plan snapshots, permission-filtered exports and complete print summaries.
+- Neutral education-charity profiles with source-linked comparison and optional intention prefilling; giving still requires a separately completed route.
+- Permission-filtered factual brief for professional review, with document, account and unresolved-action summaries.
 - Adviser business case with an adjustable value calculator, explicit proposed pricing, scope and operating-cost assumptions.
 
 ## Run locally
