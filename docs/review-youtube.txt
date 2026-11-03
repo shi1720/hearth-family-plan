@@ -15,19 +15,24 @@ The proposed customer is an independent advice firm. The pricing and staff-time 
 
 Built by Shivam Gupta with AI-assisted research, implementation and testing.
 
-Application: pending final clean-URL verification.
+Application: https://hearth-family-plan.web.app
+Evaluation: https://hearth-family-plan.web.app/evaluation
 Source: https://github.com/shi1720/hearth-family-plan
 Video URL: pending user review and any later authorised publication.
 
-CHAPTER DRAFT
+CHAPTERS
 00:00 A folder is not the whole plan
-00:12 Maria's unresolved records
-00:40 Read and review the evidence
-01:00 A source-backed next step
-01:24 Share only what is needed
-01:41 Help when the plan is needed
-02:14 Optional giving
-02:23 A reason for a firm to buy
+00:09 Maria's unresolved records
+00:35 Read and review the evidence
+00:48 A source-backed next step
+00:58 Confirmation needs evidence
+01:08 Share only what is needed
+01:22 Help when the plan is needed
+01:31 Claims and recorded funds
+01:51 A way to check the rules
+02:01 Optional giving
+02:08 A reason for a firm to buy
+02:25 A clearer next step
 
 Update chapter timestamps to match the rendered media. This list is an editing draft, not evidence that the video has been uploaded. Provide the separate caption file alongside the local video. Review automatic captions against the final audio before any later publication.
 
@@ -81,4 +86,4 @@ OTHER REVIEW OPINIONS
 The strongest part of the submission is the source-to-action-to-confirmation flow, plus a visible privacy boundary. The main commercial uncertainty is whether an adviser will pay for the complete service once operating and professional time are counted. The main presentation risk is rushing through too many features instead of showing one meaningful completed handoff. No official numerical rubric score or dedicated legal-AI prize is claimed.
 
 CLEAN URL STATUS
-hearth-family-plan.web.app is the planned Firebase hostname. Availability and final deployment must be confirmed by root. Do not write it into a live-link field until the final sign-in, persistence, files and Meta review paths work through that route. A static redirect or landing page alone does not establish that verification.
+The Firebase Hosting address is live. Anonymous private-API access is rejected; isolated sample sessions and actual Meta model responses were verified through the clean origin. Google popup completion remains a manual review item. The video remains local and the submission form remains unsubmitted.

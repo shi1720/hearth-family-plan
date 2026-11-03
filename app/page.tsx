@@ -397,10 +397,12 @@ export default function Hearth() {
     }),
     [accessBusy, setAccessBusy] = useState(""),
     [accessConfirm, setAccessConfirm] = useState<Item | null>(null);
+  const [compactNav, setCompactNav] = useState(false);
   const [previewRole, setPreviewRole] = useState("owner"),
     [previewAccess, setPreviewAccess] = useState("documents"),
     [ownerAccess, setOwnerAccess] = useState(false);
-  useEffect(()=>{const media=window.matchMedia("(max-width: 760px)");const update=()=>{if(!media.matches)setMobile(false);};media.addEventListener("change",update);return()=>media.removeEventListener("change",update);},[]);
+  useEffect(()=>{const media=window.matchMedia("(max-width: 1000px)");const update=()=>{setCompactNav(media.matches);if(!media.matches)setMobile(false);};update();media.addEventListener("change",update);return()=>media.removeEventListener("change",update);},[]);
+  useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(""), 8000); return () => window.clearTimeout(timer); }, [notice]);
   const fileRef = useRef<HTMLInputElement>(null);
   const loadSequence = useRef(0);
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -571,6 +573,7 @@ export default function Hearth() {
     setMobile(false);
     setSearch("");
     window.scrollTo({top:0,behavior:"instant"});
+    if (mobile) window.setTimeout(() => document.getElementById("main")?.focus({preventScroll:true}), 0);
   }
   const state: Item = data?.state || {},
     derived: Item = data?.derived || {},
@@ -829,11 +832,12 @@ export default function Hearth() {
         <button
           className="scrim"
           aria-label="Close navigation"
-          onClick={() => setMobile(false)}
+          onClick={() => {setMobile(false);menuRef.current?.focus();}}
         />
       )}
-      <aside id="primary-sidebar" ref={sidebarRef} className={`sidebar ${mobile ? "open" : ""}`} aria-label="Family plan navigation">
+      <aside id="primary-sidebar" ref={sidebarRef} className={`sidebar ${mobile ? "open" : ""}`} aria-label="Family plan navigation" inert={compactNav && !mobile ? true : undefined} aria-hidden={compactNav && !mobile ? true : undefined}>
         <button className="icon-button mobile-sidebar-close" aria-label="Close navigation" onClick={()=>{setMobile(false);menuRef.current?.focus();}}><X size={20}/></button>
+        <div className="sidebar-scroll">
         <button
           className="brand"
           onClick={() => navigate("Home")}
@@ -885,13 +889,14 @@ export default function Hearth() {
             Set your pace <ArrowRight size={12} />
           </button>
         </div>
+        </div>
         <div className="sidebar-bottom">
           <button
             className="privacy-link"
             disabled={!data}
             onClick={() => open("preferences", state.preferences)}
           >
-            <LockKeyhole size={13} /> Private, and in your control
+            <LockKeyhole size={13} /><span>Private, and in your control</span>
           </button>
           <button
             className="user-profile"
@@ -958,6 +963,7 @@ export default function Hearth() {
         </header>
         <main
           id="main"
+          tabIndex={-1}
           className={`content ${authRequired && !data ? "signed-out-content" : ""}`}
         >
           {ownerAccess && (
@@ -1850,7 +1856,7 @@ export default function Hearth() {
                       </span>
                     }
                   >
-                    <div className="table-scroll">
+                    <div className="table-scroll document-table">
                       <table>
                         <thead>
                           <tr>
@@ -1868,10 +1874,10 @@ export default function Hearth() {
                                 <strong>{d.title}</strong>
                                 <small>{d.kind}</small>
                               </td>
-                              <td>
+                              <td data-label="Recorded status">
                                 <Badge value={d.status} />
                               </td>
-                              <td>
+                              <td data-label="Original / execution">
                                 <span>
                                   {d.originalLocation || "Original not located"}
                                 </span>
@@ -1880,7 +1886,7 @@ export default function Hearth() {
                                     "Execution evidence not recorded"}
                                 </small>
                               </td>
-                              <td>
+                              <td data-label="Access">
                                 <Visibility value={d.visibility} />
                               </td>
                               <td>
@@ -2637,12 +2643,12 @@ export default function Hearth() {
                                       {t.payee || "No payee recorded"}
                                     </small>
                                   </td>
-                                  <td>
+                                  <td data-label="Type">
                                     <span className="transaction-type">
                                       {t.type}
                                     </span>
                                   </td>
-                                  <td>
+                                  <td data-label="Amount">
                                     <strong
                                       className={
                                         t.type === "inflow"
@@ -2654,7 +2660,7 @@ export default function Hearth() {
                                       {money(t.amount, ledger.currency)}
                                     </strong>
                                   </td>
-                                  <td>
+                                  <td data-label="State & evidence">
                                     <Badge value={t.status}>
                                       {t.status === "confirmed"
                                         ? "Confirmed record"
@@ -4775,19 +4781,19 @@ function CharityExplorer({
               <tr>
                 <th scope="row">Geography</th>
                 {chosen.map((p) => (
-                  <td key={p.id}>{p.geography}</td>
+                  <td key={p.id} data-label={p.name}>{p.geography}</td>
                 ))}
               </tr>
               <tr>
                 <th scope="row">Approach</th>
                 {chosen.map((p) => (
-                  <td key={p.id}>{p.approach}</td>
+                  <td key={p.id} data-label={p.name}>{p.approach}</td>
                 ))}
               </tr>
               <tr>
                 <th scope="row">Reported evidence</th>
                 {chosen.map((p) => (
-                  <td key={p.id}>
+                  <td key={p.id} data-label={p.name}>
                     {p.reportedEvidence}
                     <a href={p.reportUrl} target="_blank" rel="noreferrer">
                       Inspect official reports <ArrowUpRight size={11} />
@@ -4798,13 +4804,13 @@ function CharityExplorer({
               <tr>
                 <th scope="row">Source date</th>
                 {chosen.map((p) => (
-                  <td key={p.id}>{p.checkedAt}</td>
+                  <td key={p.id} data-label={p.name}>{p.checkedAt}</td>
                 ))}
               </tr>
               <tr>
                 <th scope="row">Limits</th>
                 {chosen.map((p) => (
-                  <td key={p.id}>{p.limitations}</td>
+                  <td key={p.id} data-label={p.name}>{p.limitations}</td>
                 ))}
               </tr>
             </tbody>

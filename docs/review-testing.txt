@@ -1,9 +1,9 @@
 HEARTH REVIEW GUIDE
-A friendly walkthrough for Shivam. Use the supplied final app link and the local video when they are ready. Do not submit the competition form or upload the video during this review.
+A friendly walkthrough for Shivam. The app and local narrated review video are ready for review. Do not submit the competition form or upload the video during this review.
 
 START HERE
-1. Open the final verified app link. The planned clean address is hearth-family-plan.web.app, but these instructions do not assert it is deployed. If the handoff still says verification is pending, use the verified link root provides.
-2. Sign in. You should receive your own household workspace, not somebody else's private records. The Maria Ellis scenario should be clearly labeled fictional.
+1. Open https://hearth-family-plan.web.app. The separate evaluation page is https://hearth-family-plan.web.app/evaluation.
+2. Choose Explore a private sample. You receive your own isolated fictional workspace. Google or verified-email sign-in is required to create a real plan or invite someone. The public sample AI allowance is shared and bounded to 12 requests per rolling day; a depleted allowance returns an explicit error.
 3. Keep this review in the sample household and use its original synthetic PDF. Do not replace the sample with a new personal plan unless you intend to keep that change. The normal records should remain usable if you skip AI review.
 
 FIVE-MINUTE PRODUCT CHECK
@@ -67,3 +67,9 @@ Send the screen/step, expected result, actual result, exact visible error, brows
 
 READY FOR YOUR REVIEW WHEN
 The final app route is verified, the source repository is anonymously readable, the local narrated video and caption file exist and play correctly, the submission fields contain honest final links, and the latest tests are recorded. Production professional-service launch remains a separate decision with real legal/operations providers and security/privacy review.
+
+CURRENT VERIFICATION
+The clean Firebase private sample, reload persistence, live Spark and Wonder proposals, rule evaluation and live Spark mechanical checks were exercised through the hosted origin. Original PDF intake, checked transcription, task acceptance, confirmation evidence, a claim packet, ledger entries and giving intentions were exercised with synthetic data through the local Firebase gateway connected to the same production backend. The source includes 72 unit checks, 12 gateway checks, 14 isolated key-policy checks, 10 atomic access-effect checks, 44 built-Worker API checks and two 50-pair transport regressions. The GitHub CI run for 0b903806241e8200f85dd3e81e86259c7fa104c8 passed. These bounded checks do not establish complete security or legal fitness.
+
+REVIEW LIMIT
+The automated Chrome Google popup flow did not complete: its callback window closed before returning an app session. The isolated anonymous Firebase sample flow did complete. Verify Google sign-in manually in your normal browser before a real-plan launch; no successful Google sign-in is claimed. Do not use real family records for this review.

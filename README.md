@@ -47,11 +47,12 @@ The public /evaluation page executes 19 synthetic workflow contracts against the
 npm test
 npm run test:gateway
 npm run test:key-policy
+npm run test:plan-effects
 npm run typecheck
 npm run build
 ```
 
-The isolated D1 key-policy suite tests 32 concurrent sample owners and admits exactly 12 shared requests, without making model calls or touching an app database. Gateway tests use injected synthetic identities to verify encryption, refresh binding, CSRF, header stripping and selected-household handling. They do not substitute for the separate hosted Firebase sign-in and live model walkthrough. The existing built-Worker HTTP suite and both 50-pair transport regressions remain in CI.
+The isolated D1 key-policy suite tests 32 concurrent sample owners and admits exactly 12 shared requests, without making model calls or touching an app database. Gateway tests use injected synthetic identities to verify encryption, refresh binding, CSRF, header stripping and selected-household handling. They do not substitute for the separate hosted Firebase sign-in and live model walkthrough. The built-Worker HTTP suite has 44 checks, with two further 50-pair transport regressions. Ten isolated D1 integration cases force stale invitation, revocation and membership saves and SQL failures to verify state, effects, audit and snapshots commit together or not at all. These suites run in CI.
 
 ## Run locally
 
@@ -117,3 +118,11 @@ Before using real sensitive records or accepting paid case responsibility: indep
 Original application, domain rules, tests, synthetic demo PDF and submission materials: Shivam Gupta, with disclosed AI assistance. Framework scaffold: OpenAI Sites Vinext starter and its vendored integration (preserved license under `scripts/vite/`). UI icons: Lucide (ISC); React, Vinext, Vite, Drizzle, Zod and other dependencies retain their own licenses. No private client documents or third-party insurance forms are bundled. No personal API key, local database, access token or environment file belongs in source control.
 
 MIT license applies to original project code. See LICENSE.
+
+## Responsive interface
+
+The navigation scrolls independently while privacy and account controls remain visible. Phones and portrait tablets use a focus-managed drawer. Document and ledger records become labeled cards on phones, comparison rows name each charity, and forms retain visible actions with 16px input text. Save feedback clears after eight seconds. Checked layouts include 320px and 390px phones, a 768px tablet, and a 1280 × 640 laptop.
+
+## Review materials
+
+See docs/project-story.txt for the project story, docs/review-testing.txt for the test walkthrough, and docs/review-youtube.txt for the title and description draft. The narrated review uses original fictional records and actual app footage edited for pacing. The generated voice is a standard Google Cloud Chirp voice, not a clone of a real person. The review video has not been uploaded to YouTube and the competition draft has not been submitted. Google popup sign-in did not complete in the automated browser session and remains a manual review item; anonymous sample sign-in was verified through the clean Firebase origin.

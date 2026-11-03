@@ -208,7 +208,7 @@ export function createGatewayServer(config, dependencies = {}) {
         if (item) {
           const root = new URL('file://' + process.env.HEARTH_REVIEW_STUDIO_ROOT.replace(/\/$/, '') + '/');
           const bytes = await readFile(new URL(item[0], root));
-          response.writeHead(200, { ...securityHeaders(config), 'Content-Type': item[1], 'Cache-Control': 'no-store' }); response.end(bytes); return;
+          response.writeHead(200, { ...securityHeaders(config), 'Content-Type': item[1], 'Content-Length': bytes.length, 'Cache-Control': 'no-store' }); response.end(bytes); return;
         }
       }
       if (WRITE_METHODS.has(request.method)) checkOrigin(request, config);
