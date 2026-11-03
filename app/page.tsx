@@ -961,14 +961,15 @@ export default function Hearth() {
           className={`content ${authRequired && !data ? "signed-out-content" : ""}`}
         >
           {ownerAccess && (
+            <details className="permission-preview-disclosure" open={previewRole !== "owner" || undefined} onToggle={(event) => { if (previewRole !== "owner" && !event.currentTarget.open) event.currentTarget.open = true; }}>
+              <summary><ShieldCheck size={14} /> Preview what someone can see</summary>
             <div className="role-preview">
               <div>
                 <ShieldCheck size={15} />
                 <span>
                   <strong>Permission preview</strong>
                   <small>
-                    See the actual server-filtered record. Previewing does not
-                    change membership.
+                    Previewing does not share anything or change membership.
                   </small>
                 </span>
               </div>
@@ -1018,6 +1019,7 @@ export default function Hearth() {
                 </span>
               )}
             </div>
+            </details>
           )}
 
           {error && (
@@ -1198,7 +1200,7 @@ export default function Hearth() {
             )
           ) : (
             <>
-              {isDemo && <section className="private-sample-banner"><ShieldCheck size={19}/><div><strong>Your private sample</strong><p>Explore the fictional records and evidence workflows. Sign in with Google or a verified email to create a real plan or invite another person.</p></div><a className="button secondary" href={signInPath}>Sign in for my own plan <ArrowRight size={14}/></a></section>}
+              {isDemo && <section className="private-sample-banner"><ShieldCheck size={16}/><p><strong>Your private fictional sample.</strong> Sign in to create your own plan and invite people.</p><a href={signInPath}>Sign in <ArrowRight size={13}/></a></section>}
               {view === "Home" ? (
                 <>
                   {!owner && (

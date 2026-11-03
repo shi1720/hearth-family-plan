@@ -1,0 +1,14 @@
+{
+  "name": "hearth-isolated-plan-effects-test",
+  "main": "./plan-effects.worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hearth-plan-effects-test",
+      "database_id": "00000000-0000-0000-0000-000000000043"
+    }
+  ],
+  "vars": { "HEARTH_PLAN_EFFECTS_TEST": "synthetic-loopback-only" }
+}

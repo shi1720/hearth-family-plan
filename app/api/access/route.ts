@@ -1,3 +1,4 @@
+import type { PlanEffect } from "@/lib/server";
 import { identity, load, db, body, fail, save } from "@/lib/server";
 import { assertRole, appendEvent, DomainError } from "@/lib/domain";
 export const dynamic = "force-dynamic";
@@ -37,31 +38,15 @@ export async function POST(req: Request) {
         new Error("Plan revision changed. Reload before changing access."),
         { status: 409 },
       );
+    let effect: PlanEffect;
     if (p.action === "revoke-invitation") {
       if (typeof p.tokenHash !== "string" || p.tokenHash.length !== 64)
         throw new DomainError("Invalid invitation identifier.");
-      const r = await db()
-        .prepare(
-          "UPDATE invitations SET accepted_by=? WHERE token_hash=? AND household=? AND accepted_by IS NULL",
-        )
-        .bind("REVOKED", p.tokenHash, x.state.id)
-        .run();
-      if (!r.meta.changes)
-        throw new DomainError("Pending invitation not found.");
+      effect = { type: "revoke-invitation", tokenHash: p.tokenHash };
     } else if (p.action === "remove-member") {
       if (typeof p.userId !== "string" || p.userId === x.owner)
         throw new DomainError("The owner cannot be removed.");
-      const r = await db()
-        .prepare("DELETE FROM members WHERE household=? AND user=?")
-        .bind(x.state.id, p.userId)
-        .run();
-      if (!r.meta.changes) throw new DomainError("Member not found.");
-      await db()
-        .prepare(
-          "UPDATE invitations SET accepted_by=? WHERE household=? AND accepted_by=?",
-        )
-        .bind("REVOKED", x.state.id, p.userId)
-        .run();
+      effect = { type: "remove-member", userId: p.userId };
     } else throw new DomainError("Unsupported access change.");
     await appendEvent(
       x.state,
@@ -69,7 +54,7 @@ export async function POST(req: Request) {
       p.action,
       "Owner revoked the specified access; no message was sent.",
     );
-    await save(x.state, x.revision);
+    await save(x.state, x.revision, effect);
     return Response.json(
       { ok: true },
       { headers: { "Cache-Control": "no-store" } },

@@ -17,6 +17,8 @@ jobs:
       - run: npm test
       - name: Verify isolated shared AI key policy
         run: node tests/key-policy.integration.mjs
+      - name: Verify atomic invitation and access changes
+        run: npm run test:plan-effects
       - name: Verify Firebase gateway
         run: |
           npm ci --prefix gateway

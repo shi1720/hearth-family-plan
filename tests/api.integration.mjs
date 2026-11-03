@@ -505,6 +505,112 @@ check("revoked link can no longer grant access", () =>
   assert.equal(x.r.status, 400),
 );
 
+// Concurrent requests intentionally share the same revision. No retries: a losing
+// write must be rejected, not silently replayed on top of the winning state.
+const concurrentBefore = (await request("/api/workspace", owner)).j;
+const concurrentMarkers = [`race-A-${suffix}`, `race-B-${suffix}`];
+const concurrentWrites = await Promise.all(
+  concurrentMarkers.map((privateNote) =>
+    request("/api/workspace", owner, {
+      action: "save-preferences",
+      revision: concurrentBefore.revision,
+      preferences: { contactFrequency: "Only when I ask", privateNote },
+    }),
+  ),
+);
+check(
+  "same-revision simultaneous writes have one winner and one conflict",
+  () => {
+    assert.deepEqual(
+      concurrentWrites.map((q) => q.r.status).sort(),
+      [200, 409],
+    );
+  },
+);
+const concurrentWinner = concurrentWrites.find((q) => q.r.status === 200).j;
+state = (await request("/api/workspace", owner)).j;
+check("concurrent loser adds no state event or phantom completion", () => {
+  assert.equal(state.revision, concurrentBefore.revision + 1);
+  assert.deepEqual(state.state, concurrentWinner.state);
+  assert.equal(
+    state.state.events.length,
+    concurrentBefore.state.events.length + 1,
+  );
+  assert.deepEqual(
+    state.state.events.slice(0, -1),
+    concurrentBefore.state.events,
+  );
+  assert.deepEqual(state.state.tasks, concurrentBefore.state.tasks);
+  assert.equal(
+    state.state.preferences.privateNote,
+    concurrentWinner.state.preferences.privateNote,
+  );
+});
+let concurrentHistory = (await request("/api/history", owner)).j;
+check(
+  "concurrent writes preserve exactly one correct prior revision snapshot",
+  () => {
+    assert.equal(concurrentHistory.currentRevision, state.revision);
+    const snapshots = concurrentHistory.versions.filter(
+      (v) => v.revision === concurrentBefore.revision,
+    );
+    assert.equal(snapshots.length, 1);
+    assert.deepEqual(snapshots[0].state, concurrentBefore.state);
+    assert.equal(
+      concurrentHistory.versions.some((v) => v.revision >= state.revision),
+      false,
+    );
+  },
+);
+const invitationBefore = state;
+const accessBefore = (await request("/api/access", owner)).j;
+const invitationRaceEmails = [
+  `race-a-${suffix}@hearth.test`,
+  `race-b-${suffix}@hearth.test`,
+];
+const invitationRace = await Promise.all(
+  invitationRaceEmails.map((email) =>
+    request("/api/workspace", owner, {
+      action: "invite",
+      revision: invitationBefore.revision,
+      email,
+      role: "helper",
+      access: "documents",
+    }),
+  ),
+);
+check(
+  "simultaneous invitation creation has one winner and one conflict",
+  () => {
+    assert.deepEqual(invitationRace.map((q) => q.r.status).sort(), [200, 409]);
+  },
+);
+const accessAfter = (await request("/api/access", owner)).j;
+state = (await request("/api/workspace", owner)).j;
+check(
+  "conflicted invitation leaves no phantom pending link or audit event",
+  () => {
+    assert.equal(
+      accessAfter.invitations.length,
+      accessBefore.invitations.length + 1,
+    );
+    const raceInvitations = accessAfter.invitations.filter((i) =>
+      invitationRaceEmails.includes(i.email),
+    );
+    assert.equal(raceInvitations.length, 1);
+    assert.equal(
+      raceInvitations[0].email,
+      invitationRaceEmails[invitationRace.findIndex((q) => q.r.status === 200)],
+    );
+    assert.equal(state.revision, invitationBefore.revision + 1);
+    assert.equal(
+      state.state.events.length,
+      invitationBefore.state.events.length + 1,
+    );
+    assert.equal(state.state.events.at(-1).action, "invite");
+  },
+);
+
 console.log(
   JSON.stringify({
     passed,

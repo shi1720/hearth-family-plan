@@ -1,3 +1,4 @@
+import type { PlanEffect } from "@/lib/server";
 import {
   identity,
   load,
@@ -119,6 +120,7 @@ export async function POST(req: Request) {
         "Plan history capacity reached. Export and contact the operator.",
       );
     let invitation;
+    let effect: PlanEffect | undefined;
     if (p.action === "analyze") {
       assertRole(x.role, ["owner"]);
       if (p.consent !== true)
@@ -290,19 +292,14 @@ export async function POST(req: Request) {
       const token = crypto.randomUUID() + crypto.randomUUID();
       const hash = await sha(token),
         expiresAt = new Date(Date.now() + 7 * 86400000).toISOString();
-      await db()
-        .prepare(
-          "INSERT INTO invitations(token_hash,household,email,role,access,expires_at) VALUES(?,?,?,?,?,?)",
-        )
-        .bind(
-          hash,
-          state.id,
-          q.email.toLowerCase(),
-          q.role,
-          q.access,
-          expiresAt,
-        )
-        .run();
+      effect = {
+        type: "invite",
+        tokenHash: hash,
+        email: q.email.toLowerCase(),
+        role: q.role,
+        access: q.access,
+        expiresAt,
+      };
       invitation = {
         url: `${new URL(req.url).origin}/?invite=${token}`,
         expiresAt,
@@ -328,7 +325,7 @@ export async function POST(req: Request) {
           ? "Created a seven-day invitation link; it has not been sent."
           : `Recorded ${String(p.action).replaceAll("-", " ")}.`,
     );
-    const nextRevision = await save(state, revision);
+    const nextRevision = await save(state, revision, effect);
     return Response.json(
       {
         ...(await payload(

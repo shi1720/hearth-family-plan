@@ -1,0 +1,5 @@
+CREATE TABLE households(id TEXT PRIMARY KEY,owner TEXT UNIQUE NOT NULL,state TEXT NOT NULL,revision INTEGER NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE members(household TEXT NOT NULL,user TEXT NOT NULL,role TEXT NOT NULL,access TEXT NOT NULL,email TEXT NOT NULL,PRIMARY KEY(household,user));
+CREATE TABLE invitations(token_hash TEXT PRIMARY KEY,household TEXT NOT NULL,email TEXT NOT NULL,role TEXT NOT NULL,access TEXT NOT NULL,expires_at TEXT NOT NULL,accepted_by TEXT);
+CREATE TABLE revisions(id TEXT PRIMARY KEY,household TEXT NOT NULL,revision INTEGER NOT NULL,state TEXT NOT NULL,created_at TEXT NOT NULL);
+CREATE TABLE audit(id TEXT PRIMARY KEY,household TEXT NOT NULL,event TEXT NOT NULL,created_at TEXT NOT NULL);

@@ -108,38 +108,122 @@ export async function load(req: Request, user: ReturnType<typeof identity>) {
     owner: row.owner as string,
   };
 }
-export async function save(s: State, revision: number) {
+export type PlanEffect =
+  | {
+      type: "invite";
+      tokenHash: string;
+      email: string;
+      role: Exclude<Role, "owner">;
+      access: string;
+      expiresAt: string;
+    }
+  | { type: "revoke-invitation"; tokenHash: string }
+  | { type: "remove-member"; userId: string };
+export async function save(s: State, revision: number, effect?: PlanEffect) {
   if (new TextEncoder().encode(JSON.stringify(s)).length > 900000)
     throw new DomainError(
       "This plan has reached its record allowance. Export a copy and contact the operator before adding more text.",
     );
   const e = s.events.at(-1)!;
+  // D1 batch is transactional. Preconditions apply to BOTH the snapshot and
+  // update; effects require this exact winning event, not merely revision+1.
+  let precondition = "";
+  let parameters: string[] = [];
+  if (effect?.type === "revoke-invitation") {
+    precondition =
+      " AND EXISTS(SELECT 1 FROM invitations WHERE token_hash=? AND household=households.id AND accepted_by IS NULL)";
+    parameters = [effect.tokenHash];
+  } else if (effect?.type === "remove-member") {
+    precondition =
+      " AND EXISTS(SELECT 1 FROM members WHERE household=households.id AND user=? AND user<>households.owner)";
+    parameters = [effect.userId];
+  }
+  const winning =
+    "EXISTS(SELECT 1 FROM households WHERE id=? AND revision=? AND json_extract(state,'$.events[#-1].id')=?)";
+  const winnerArgs = [s.id, revision + 1, e.id];
+  const effects: D1PreparedStatement[] = [];
+  if (effect?.type === "invite") {
+    effects.push(
+      db()
+        .prepare(
+          `INSERT INTO invitations(token_hash,household,email,role,access,expires_at) SELECT ?,?,?,?,?,? WHERE ${winning}`,
+        )
+        .bind(
+          effect.tokenHash,
+          s.id,
+          effect.email,
+          effect.role,
+          effect.access,
+          effect.expiresAt,
+          ...winnerArgs,
+        ),
+    );
+  } else if (effect?.type === "revoke-invitation") {
+    effects.push(
+      db()
+        .prepare(
+          `UPDATE invitations SET accepted_by='REVOKED' WHERE token_hash=? AND household=? AND accepted_by IS NULL AND ${winning}`,
+        )
+        .bind(effect.tokenHash, s.id, ...winnerArgs),
+    );
+  } else if (effect?.type === "remove-member") {
+    effects.push(
+      db()
+        .prepare(
+          `DELETE FROM members WHERE household=? AND user=? AND ${winning}`,
+        )
+        .bind(s.id, effect.userId, ...winnerArgs),
+    );
+    effects.push(
+      db()
+        .prepare(
+          `UPDATE invitations SET accepted_by='REVOKED' WHERE household=? AND accepted_by=? AND ${winning}`,
+        )
+        .bind(s.id, effect.userId, ...winnerArgs),
+    );
+  }
   const r = await db().batch([
     db()
       .prepare(
-        "INSERT INTO revisions(id,household,revision,state,created_at) SELECT ?,id,revision,state,? FROM households WHERE id=? AND revision=?",
+        "INSERT INTO revisions(id,household,revision,state,created_at) SELECT ?,id,revision,state,? FROM households WHERE id=? AND revision=?" +
+          precondition,
       )
-      .bind(crypto.randomUUID(), new Date().toISOString(), s.id, revision),
+      .bind(
+        crypto.randomUUID(),
+        new Date().toISOString(),
+        s.id,
+        revision,
+        ...parameters,
+      ),
     db()
       .prepare(
-        "UPDATE households SET state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?",
+        "UPDATE households SET state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?" +
+          precondition,
       )
-      .bind(JSON.stringify(s), new Date().toISOString(), s.id, revision),
+      .bind(
+        JSON.stringify(s),
+        new Date().toISOString(),
+        s.id,
+        revision,
+        ...parameters,
+      ),
+    ...effects,
     db()
       .prepare(
-        "INSERT INTO audit(id,household,event,created_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM households WHERE id=? AND revision=? AND json_extract(state,'$.events[#-1].id')=?)",
+        `INSERT INTO audit(id,household,event,created_at) SELECT ?,?,?,? WHERE ${winning}`,
       )
-      .bind(e.id, s.id, JSON.stringify(e), e.at, s.id, revision + 1, e.id),
+      .bind(e.id, s.id, JSON.stringify(e), e.at, ...winnerArgs),
   ]);
   if (!r[1].meta.changes)
     throw Object.assign(
       new Error(
-        "This plan changed in another tab. Reload before making this change.",
+        "This plan or its access changed in another tab. Reload before making this change.",
       ),
       { status: 409 },
     );
   return revision + 1;
 }
+
 export const models = {
   model: "muse-spark-1.3",
   codingModel: "muse-wonder-1.0",

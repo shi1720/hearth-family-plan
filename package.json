@@ -17,7 +17,8 @@
     "test:api": "node tests/api.integration.mjs",
     "test:gateway": "node --test tests/gateway.test.mjs",
     "test:key-policy": "node tests/key-policy.integration.mjs",
-    "deploy:firebase": "node scripts/deploy-firebase.mjs"
+    "deploy:firebase": "node scripts/deploy-firebase.mjs",
+    "test:plan-effects": "node tests/plan-effects.integration.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
