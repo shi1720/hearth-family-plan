@@ -1,7 +1,70 @@
-import {identity,body,db,sha,fail} from '@/lib/server';
-import {DomainError} from '@/lib/domain';
-export const dynamic='force-dynamic';
-async function invitation(token:string){if(!token||token.length>200)throw new DomainError('Invalid invitation.');const i:any=await db().prepare('SELECT * FROM invitations WHERE token_hash=?').bind(await sha(token)).first();if(!i||i.accepted_by||i.expires_at<new Date().toISOString())throw new DomainError('Invitation is invalid, expired or already used.');return i;}
-export async function GET(req:Request){try{const u=identity(req),i=await invitation(new URL(req.url).searchParams.get('token')||'');if(u.email!==i.email)throw Object.assign(new Error('Sign in with the invited email address.'),{status:403});return Response.json({role:i.role,access:i.access,email:i.email,expiresAt:i.expires_at});}catch(e){return fail(e);}}
-export async function POST(req:Request){try{const u=identity(req),p=await body(req),i=await invitation(p.token);if(u.email!==i.email)throw Object.assign(new Error('The signed-in email does not match the invitation.'),{status:403});
- const hash=await sha(p.token);const results=await db().batch([db().prepare('UPDATE invitations SET accepted_by=? WHERE token_hash=? AND accepted_by IS NULL AND expires_at>?').bind(u.id,hash,new Date().toISOString()),db().prepare('INSERT INTO members(household,user,role,access,email) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM invitations WHERE token_hash=? AND accepted_by=?) ON CONFLICT(household,user) DO NOTHING').bind(i.household,u.id,i.role,i.access,u.email,hash,u.id)]);if(!results[0].meta.changes)throw new DomainError('Invitation was already used.');return Response.json({accepted:true},{headers:{'Set-Cookie':`hearth_household=${i.household}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${new URL(req.url).protocol==='https:'?'; Secure':''}`}});}catch(e){return fail(e);}}
+import { identity, body, db, sha, fail } from "@/lib/server";
+import { DomainError } from "@/lib/domain";
+export const dynamic = "force-dynamic";
+async function invitation(token: string) {
+  if (!token || token.length > 200)
+    throw new DomainError("Invalid invitation.");
+  const i: any = await db()
+    .prepare("SELECT * FROM invitations WHERE token_hash=?")
+    .bind(await sha(token))
+    .first();
+  if (!i || i.accepted_by || i.expires_at < new Date().toISOString())
+    throw new DomainError("Invitation is invalid, expired or already used.");
+  return i;
+}
+export async function GET(req: Request) {
+  try {
+    const u = identity(req),
+      i = await invitation(new URL(req.url).searchParams.get("token") || "");
+    if (u.email !== i.email)
+      throw Object.assign(
+        new Error("Sign in with the invited email address."),
+        { status: 403 },
+      );
+    return Response.json({
+      role: i.role,
+      access: i.access,
+      email: i.email,
+      expiresAt: i.expires_at,
+    });
+  } catch (e) {
+    return fail(e);
+  }
+}
+export async function POST(req: Request) {
+  try {
+    const u = identity(req),
+      p = await body(req),
+      i = await invitation(p.token);
+    if (u.email !== i.email)
+      throw Object.assign(
+        new Error("The signed-in email does not match the invitation."),
+        { status: 403 },
+      );
+    const hash = await sha(p.token);
+    const results = await db().batch([
+      db()
+        .prepare(
+          "UPDATE invitations SET accepted_by=? WHERE token_hash=? AND accepted_by IS NULL AND expires_at>?",
+        )
+        .bind(u.id, hash, new Date().toISOString()),
+      db()
+        .prepare(
+          "INSERT INTO members(household,user,role,access,email) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM invitations WHERE token_hash=? AND accepted_by=?) ON CONFLICT(household,user) DO NOTHING",
+        )
+        .bind(i.household, u.id, i.role, i.access, u.email, hash, u.id),
+    ]);
+    if (!results[0].meta.changes)
+      throw new DomainError("Invitation was already used.");
+    return Response.json(
+      { accepted: true },
+      {
+        headers: {
+          "Set-Cookie": `hearth_household=${i.household}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${new URL(req.url).protocol === "https:" ? "; Secure" : ""}`,
+        },
+      },
+    );
+  } catch (e) {
+    return fail(e);
+  }
+}

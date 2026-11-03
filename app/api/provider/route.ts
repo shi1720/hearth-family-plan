@@ -1,6 +1,56 @@
-import {identity,load,body,fail,putKey,hasKey} from '@/lib/server';
-import {assertRole,DomainError} from '@/lib/domain';
-export const dynamic='force-dynamic';
-export async function GET(req:Request){try{const u=identity(req),x=await load(req,u);return Response.json({configured:await hasKey(x.owner)},{headers:{'Cache-Control':'no-store'}});}catch(e){return fail(e);}}
-export async function POST(req:Request){try{const u=identity(req),x=await load(req,u);assertRole(x.role,['owner']);const p=await body(req,3000);if(typeof p.apiKey!=='string'||p.apiKey.trim().length<20||p.apiKey.length>2000)throw new DomainError('Enter a valid Meta API key.');
- const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);let res;try{res=await fetch('https://api.meta.ai/v1/models',{headers:{Authorization:`Bearer ${p.apiKey.trim()}`},signal:controller.signal});}finally{clearTimeout(timer);}if(!res.ok)throw new DomainError(`Meta could not validate this key (${res.status}). It was not stored.`);const models:any=await res.json();if(!models.data?.some((m:any)=>m.id==='muse-spark-1.3'))throw new DomainError('This account does not expose Muse Spark 1.3. Check model access before connecting.');await putKey(x.owner,p.apiKey.trim());return Response.json({configured:true,model:'muse-spark-1.3'},{headers:{'Cache-Control':'no-store'}});}catch(e){return fail(e);}}
+import { identity, load, body, fail, putKey, hasKey } from "@/lib/server";
+import { assertRole, DomainError } from "@/lib/domain";
+export const dynamic = "force-dynamic";
+export async function GET(req: Request) {
+  try {
+    const u = identity(req),
+      x = await load(req, u);
+    return Response.json(
+      { configured: await hasKey(x.owner) },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (e) {
+    return fail(e);
+  }
+}
+export async function POST(req: Request) {
+  try {
+    const u = identity(req),
+      x = await load(req, u);
+    assertRole(x.role, ["owner"]);
+    const p = await body(req, 3000);
+    if (
+      typeof p.apiKey !== "string" ||
+      p.apiKey.trim().length < 20 ||
+      p.apiKey.length > 2000
+    )
+      throw new DomainError("Enter a valid Meta API key.");
+    const controller = new AbortController(),
+      timer = setTimeout(() => controller.abort(), 15000);
+    let res;
+    try {
+      res = await fetch("https://api.meta.ai/v1/models", {
+        headers: { Authorization: `Bearer ${p.apiKey.trim()}` },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok)
+      throw new DomainError(
+        `Meta could not validate this key (${res.status}). It was not stored.`,
+      );
+    const models: any = await res.json();
+    if (!models.data?.some((m: any) => m.id === "muse-spark-1.3"))
+      throw new DomainError(
+        "This account does not expose Muse Spark 1.3. Check model access before connecting.",
+      );
+    await putKey(x.owner, p.apiKey.trim());
+    return Response.json(
+      { configured: true, model: "muse-spark-1.3" },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (e) {
+    return fail(e);
+  }
+}

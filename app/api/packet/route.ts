@@ -1,4 +1,65 @@
-import {identity,load,fail} from '@/lib/server';
-import {filtered,DomainError} from '@/lib/domain';
-export const dynamic='force-dynamic';
-export async function GET(req:Request){try{const u=identity(req),x=await load(req,u);const s=filtered(x.state,x.role,x.access);const claim=s.claims?.find(c=>c.id===new URL(req.url).searchParams.get('claim'));if(!claim)throw Object.assign(new Error('Permitted claim record not found.'),{status:404});const account=s.accounts.find(a=>a.id===claim.accountId);const text=[`HEARTH | INSURANCE CLAIM PREPARATION PACKET`,`Prepared ${new Date().toISOString()}`,s.fixture?'FICTIONAL DEMONSTRATION — DO NOT SUBMIT':'DRAFT FOR AUTHORISED REVIEW — NOT AN INSURER CLAIM FORM','',`Person: ${s.household.personName}`,`Claimant: ${claim.claimant}`,`Institution: ${claim.institution}`,`Policy: ${account?.name||'See restricted policy record'} ${account?.lastFour?`(ending ${account.lastFour})`:''}`,`Claim reference: ${claim.reference||'Not recorded'}`,`Recorded stage: ${claim.status}`,'',`SEPARATE CLAIMANT AUTHORITY`,claim.claimantAuthority||'MISSING — confirm the claimant and their entitlement with the insurer. An estate role alone does not establish this.','',`INSURER REQUIREMENTS`,claim.requirements||'MISSING — request the current checklist and required forms from the insurer.','',`NEXT ACTION`,claim.nextAction||'Confirm the insurer-specific process and the authorised owner of the next step.',`Recorded deadline: ${claim.deadline||'Not recorded — confirm any actual deadline.'}`,'',`SUBMISSION EVIDENCE`,claim.submissionEvidence||'Not recorded. Draft preparation is not submission.','',`PAYMENT EVIDENCE`,claim.paymentEvidence||'Not recorded. An approved claim is not money received.',`Recorded amount: ${claim.currency} ${claim.amount}`,'','Review the governing policy, required signatures, recipient identity, permitted disclosures and the insurer’s current submission route. Submit only through an authorised route. Keep original/certified documents where required. This packet does not establish eligibility, legal authority, current coverage or the amount payable. Do not send bank passwords. Hearth does not file this claim or transfer money.'].join('\n');return new Response(text,{headers:{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':'attachment; filename="hearth-claim-packet.txt"','Cache-Control':'no-store'}});}catch(e){return fail(e);}}
+import { identity, load, fail } from "@/lib/server";
+import { filtered, DomainError } from "@/lib/domain";
+export const dynamic = "force-dynamic";
+export async function GET(req: Request) {
+  try {
+    const u = identity(req),
+      x = await load(req, u);
+    const s = filtered(x.state, x.role, x.access);
+    const claim = s.claims?.find(
+      (c) => c.id === new URL(req.url).searchParams.get("claim"),
+    );
+    if (!claim)
+      throw Object.assign(new Error("Permitted claim record not found."), {
+        status: 404,
+      });
+    const account = s.accounts.find((a) => a.id === claim.accountId);
+    const text = [
+      `HEARTH | INSURANCE CLAIM PREPARATION PACKET`,
+      `Prepared ${new Date().toISOString()}`,
+      s.fixture
+        ? "FICTIONAL DEMONSTRATION — DO NOT SUBMIT"
+        : "DRAFT FOR AUTHORISED REVIEW — NOT AN INSURER CLAIM FORM",
+      "",
+      `Person: ${s.household.personName}`,
+      `Claimant: ${claim.claimant}`,
+      `Institution: ${claim.institution}`,
+      `Policy: ${account?.name || "See restricted policy record"} ${account?.lastFour ? `(ending ${account.lastFour})` : ""}`,
+      `Claim reference: ${claim.reference || "Not recorded"}`,
+      `Recorded stage: ${claim.status}`,
+      "",
+      `SEPARATE CLAIMANT AUTHORITY`,
+      claim.claimantAuthority ||
+        "MISSING — confirm the claimant and their entitlement with the insurer. An estate role alone does not establish this.",
+      "",
+      `INSURER REQUIREMENTS`,
+      claim.requirements ||
+        "MISSING — request the current checklist and required forms from the insurer.",
+      "",
+      `NEXT ACTION`,
+      claim.nextAction ||
+        "Confirm the insurer-specific process and the authorised owner of the next step.",
+      `Recorded deadline: ${claim.deadline || "Not recorded — confirm any actual deadline."}`,
+      "",
+      `SUBMISSION EVIDENCE`,
+      claim.submissionEvidence ||
+        "Not recorded. Draft preparation is not submission.",
+      "",
+      `PAYMENT EVIDENCE`,
+      claim.paymentEvidence ||
+        "Not recorded. An approved claim is not money received.",
+      `Recorded amount: ${claim.currency} ${claim.amount}`,
+      "",
+      "Review the governing policy, required signatures, recipient identity, permitted disclosures and the insurer’s current submission route. Submit only through an authorised route. Keep original/certified documents where required. This packet does not establish eligibility, legal authority, current coverage or the amount payable. Do not send bank passwords. Hearth does not file this claim or transfer money.",
+    ].join("\n");
+    return new Response(text, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="hearth-claim-packet.txt"',
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (e) {
+    return fail(e);
+  }
+}

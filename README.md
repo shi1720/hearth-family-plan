@@ -35,7 +35,7 @@ npm run dev -- --port 5175
 
 Apply each migration once. After initial setup, do not replay applied migrations. The source and built preview share `.wrangler/state`. Local previews use local D1/R2; deployed records are separate. The starter also supports a loopback-only mock sign-in at `/signin-with-chatgpt?return_to=/` when using its portable dev profile.
 
-Open Settings in the app to connect a Meta API key. The server validates model access before encrypting and saving the credential. Analysis uses Standard-mode `muse-spark-1.3`; cross-record reasoning uses Standard-mode `muse-wonder-1.0`. Keys are never returned in workspace data or exports. Source/file review requires explicit consent before transmission to Meta. There is a 20-run hourly budget per household, a 5 MB file limit, and bounded request/record sizes. No model output is silently substituted when inference fails.
+Open Settings in the app to connect a Meta API key. The server validates model access before encrypting and saving the credential. Analysis uses Standard-mode `muse-spark-1.3`; cross-record reasoning uses Standard-mode `muse-wonder-1.0`. An optional operator Meta key is usable only by authenticated household owners explicitly listed in META_SHARED_EMAILS; other visitors connect their own key. Keys are never returned in workspace data or exports. Source/file review requires explicit consent before transmission to Meta. There is a 20-run hourly budget per household, a 5 MB file limit, and bounded request/record sizes. No model output is silently substituted when inference fails.
 
 ## Verify
 

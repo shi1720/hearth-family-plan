@@ -1,25 +1,322 @@
-import {env} from 'cloudflare:workers';
-import {seed,appendEvent,filtered,derive,type Role,type State,DomainError} from './domain';
-export function runtime():any{return env;}
-export function db():D1Database {const x=runtime().DB;if(!x)throw Object.assign(new Error('Persistent storage is not configured.'),{status:503});return x;}
-export function identity(req:Request){if(['localhost','127.0.0.1'].includes(new URL(req.url).hostname)&&runtime().LOCAL_DEMO_AUTH==='1')return {id:'local-owner',name:'Shivam Gupta',email:'local@hearth.test'};const id=req.headers.get('oai-authenticated-user-id'),email=req.headers.get('oai-authenticated-user-email');if(!id||!email)throw Object.assign(new Error('Sign in to open your private family workspace.'),{status:401});return {id,name:email,email:email.toLowerCase()};}
-export async function load(req:Request,user:ReturnType<typeof identity>){
- const selected=req.headers.get('cookie')?.match(/(?:^|;\s*)hearth_household=([^;]+)/)?.[1];let row:any;let role:Role='owner',access='administration';
- if(selected){row=await db().prepare('SELECT h.*,m.role,m.access FROM households h JOIN members m ON m.household=h.id WHERE h.id=? AND m.user=?').bind(selected,user.id).first();if(row){role=row.role;access=row.access;}}
- if(!row){row=await db().prepare('SELECT * FROM households WHERE owner=?').bind(user.id).first();if(!row){let s=seed();await appendEvent(s,user.email,'created','Created a private fictional family scenario.');await db().prepare('INSERT OR IGNORE INTO households(id,owner,state,revision,updated_at) VALUES(?,?,?,1,?)').bind(s.id,user.id,JSON.stringify(s),new Date().toISOString()).run();row=await db().prepare('SELECT * FROM households WHERE owner=?').bind(user.id).first();}role='owner';access='administration';}
- return {state:JSON.parse(row.state) as State,revision:Number(row.revision),role,access,owner:row.owner as string};
+import { env } from "cloudflare:workers";
+import {
+  seed,
+  appendEvent,
+  filtered,
+  derive,
+  type Role,
+  type State,
+  DomainError,
+} from "./domain";
+export function runtime(): any {
+  return env;
 }
-export async function save(s:State,revision:number){if(new TextEncoder().encode(JSON.stringify(s)).length>900000)throw new DomainError('This plan has reached its record allowance. Export a copy and contact the operator before adding more text.');const e=s.events.at(-1)!;const r=await db().batch([db().prepare('INSERT INTO revisions(id,household,revision,state,created_at) SELECT ?,id,revision,state,? FROM households WHERE id=? AND revision=?').bind(crypto.randomUUID(),new Date().toISOString(),s.id,revision),db().prepare('UPDATE households SET state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?').bind(JSON.stringify(s),new Date().toISOString(),s.id,revision),db().prepare('INSERT INTO audit(id,household,event,created_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM households WHERE id=? AND revision=? AND json_extract(state,\'$.events[#-1].id\')=?)').bind(e.id,s.id,JSON.stringify(e),e.at,s.id,revision+1,e.id)]);if(!r[1].meta.changes)throw Object.assign(new Error('This plan changed in another tab. Reload before making this change.'),{status:409});return revision+1;}
-export const models={model:'muse-spark-1.3',codingModel:'muse-wonder-1.0'};
-export async function hasKey(owner:string){return !!(runtime().META_API_KEY||await db().prepare('SELECT owner FROM credentials WHERE owner=?').bind(owner).first());}
-export async function payload(s:State,revision:number,user:any,role:Role,access:string,owner:string){const safe=filtered(s,role,access);return {state:safe,revision,user:{name:user.name,email:user.email,role},provider:{configured:await hasKey(owner),...models},derived:role==='adviser'?{...derive(safe),sponsorSummary:{peopleReady:s.people.filter(p=>p.status==='accepted').length,openActions:s.tasks.filter(t=>t.status!=='complete').length}}:derive(safe)};}
-export function fail(e:any){return Response.json({error:e instanceof DomainError?e.message:e.status?e.message:'The request could not be completed. Your plan has not been changed.'},{status:e.status||500,headers:{'Cache-Control':'no-store'}});}
-export function checkOrigin(req:Request){const o=req.headers.get('origin');if(o&&o!==new URL(req.url).origin)throw Object.assign(new Error('Cross-origin writes are rejected.'),{status:403});}
-export async function body(req:Request,max=300000){checkOrigin(req);if(!req.headers.get('content-type')?.includes('application/json'))throw new DomainError('Expected a JSON request.');const reader=req.body?.getReader();if(!reader)throw new DomainError('Empty request.');let size=0,parts:Uint8Array[]=[];for(;;){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>max){await reader.cancel();throw Object.assign(new Error('Request is too large.'),{status:413});}parts.push(value);}let all=new Uint8Array(size),i=0;for(const p of parts){all.set(p,i);i+=p.length;}try{return JSON.parse(new TextDecoder().decode(all));}catch{throw new DomainError('Invalid JSON.');}}
-function base64(a:Uint8Array){return btoa(String.fromCharCode(...a));}function bytes(s:string){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
-async function master(){const s=runtime().KEY_ENCRYPTION_SECRET;if(!s)throw Object.assign(new Error('Private encryption is not configured. Contact the operator.'),{status:503});return crypto.subtle.importKey('raw',bytes(s),'AES-GCM',false,['encrypt','decrypt']);}
-export async function encrypt(data:Uint8Array,context:string){const iv=crypto.getRandomValues(new Uint8Array(12));const encrypted=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:new TextEncoder().encode(context)},await master(),Uint8Array.from(data).buffer);return {iv:base64(iv),ciphertext:new Uint8Array(encrypted)};}
-export async function decrypt(ciphertext:Uint8Array,iv:string,context:string){return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(iv),additionalData:new TextEncoder().encode(context)},await master(),Uint8Array.from(ciphertext).buffer));}
-export async function putKey(owner:string,key:string){const encrypted=await encrypt(new TextEncoder().encode(key),`credential:${owner}`);await db().prepare('INSERT INTO credentials(owner,ciphertext,iv,updated_at) VALUES(?,?,?,?) ON CONFLICT(owner) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at').bind(owner,base64(encrypted.ciphertext),encrypted.iv,new Date().toISOString()).run();}
-export async function getKey(owner:string){if(runtime().META_API_KEY)return runtime().META_API_KEY;const row:any=await db().prepare('SELECT ciphertext,iv FROM credentials WHERE owner=?').bind(owner).first();if(!row)throw new DomainError('Connect a Meta API key in Settings before asking AI to review source text.');return new TextDecoder().decode(await decrypt(bytes(row.ciphertext),row.iv,`credential:${owner}`));}
-export async function sha(text:string|Uint8Array){const b=typeof text==='string'?new TextEncoder().encode(text):text;return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',Uint8Array.from(b).buffer))).map(x=>x.toString(16).padStart(2,'0')).join('');}
+export function db(): D1Database {
+  const x = runtime().DB;
+  if (!x)
+    throw Object.assign(new Error("Persistent storage is not configured."), {
+      status: 503,
+    });
+  return x;
+}
+export function identity(req: Request) {
+  if (
+    ["localhost", "127.0.0.1"].includes(new URL(req.url).hostname) &&
+    runtime().LOCAL_DEMO_AUTH === "1"
+  )
+    return {
+      id: "local-owner",
+      name: "Shivam Gupta",
+      email: "local@hearth.test",
+    };
+  const id = req.headers.get("oai-authenticated-user-id"),
+    email = req.headers.get("oai-authenticated-user-email");
+  if (!id || !email)
+    throw Object.assign(
+      new Error("Sign in to open your private family workspace."),
+      { status: 401 },
+    );
+  return { id, name: email, email: email.toLowerCase() };
+}
+export async function load(req: Request, user: ReturnType<typeof identity>) {
+  const selected = req.headers
+    .get("cookie")
+    ?.match(/(?:^|;\s*)hearth_household=([^;]+)/)?.[1];
+  let row: any;
+  let role: Role = "owner",
+    access = "administration";
+  if (selected) {
+    row = await db()
+      .prepare(
+        "SELECT h.*,m.role,m.access FROM households h JOIN members m ON m.household=h.id WHERE h.id=? AND m.user=?",
+      )
+      .bind(selected, user.id)
+      .first();
+    if (row) {
+      role = row.role;
+      access = row.access;
+    }
+  }
+  if (!row) {
+    row = await db()
+      .prepare("SELECT * FROM households WHERE owner=?")
+      .bind(user.id)
+      .first();
+    if (!row) {
+      let s = seed();
+      await appendEvent(
+        s,
+        user.email,
+        "created",
+        "Created a private fictional family scenario.",
+      );
+      await db()
+        .prepare(
+          "INSERT OR IGNORE INTO households(id,owner,state,revision,updated_at) VALUES(?,?,?,1,?)",
+        )
+        .bind(s.id, user.id, JSON.stringify(s), new Date().toISOString())
+        .run();
+      row = await db()
+        .prepare("SELECT * FROM households WHERE owner=?")
+        .bind(user.id)
+        .first();
+    }
+    role = "owner";
+    access = "administration";
+  }
+  if (role === "owner")
+    await db()
+      .prepare(
+        "INSERT INTO members(household,user,role,access,email) VALUES(?,?,?,?,?) ON CONFLICT(household,user) DO NOTHING",
+      )
+      .bind(row.id, user.id, "owner", "administration", user.email)
+      .run();
+  return {
+    state: JSON.parse(row.state) as State,
+    revision: Number(row.revision),
+    role,
+    access,
+    owner: row.owner as string,
+  };
+}
+export async function save(s: State, revision: number) {
+  if (new TextEncoder().encode(JSON.stringify(s)).length > 900000)
+    throw new DomainError(
+      "This plan has reached its record allowance. Export a copy and contact the operator before adding more text.",
+    );
+  const e = s.events.at(-1)!;
+  const r = await db().batch([
+    db()
+      .prepare(
+        "INSERT INTO revisions(id,household,revision,state,created_at) SELECT ?,id,revision,state,? FROM households WHERE id=? AND revision=?",
+      )
+      .bind(crypto.randomUUID(), new Date().toISOString(), s.id, revision),
+    db()
+      .prepare(
+        "UPDATE households SET state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?",
+      )
+      .bind(JSON.stringify(s), new Date().toISOString(), s.id, revision),
+    db()
+      .prepare(
+        "INSERT INTO audit(id,household,event,created_at) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM households WHERE id=? AND revision=? AND json_extract(state,'$.events[#-1].id')=?)",
+      )
+      .bind(e.id, s.id, JSON.stringify(e), e.at, s.id, revision + 1, e.id),
+  ]);
+  if (!r[1].meta.changes)
+    throw Object.assign(
+      new Error(
+        "This plan changed in another tab. Reload before making this change.",
+      ),
+      { status: 409 },
+    );
+  return revision + 1;
+}
+export const models = {
+  model: "muse-spark-1.3",
+  codingModel: "muse-wonder-1.0",
+};
+async function sharedKeyAllowed(owner: string) {
+  if (!runtime().META_API_KEY) return false;
+  const emails = String(runtime().META_SHARED_EMAILS || "")
+    .split(",")
+    .map((x: string) => x.trim().toLowerCase())
+    .filter(Boolean);
+  if (!emails.length) return false;
+  const row: any = await db()
+    .prepare("SELECT email FROM members WHERE user=? AND role=? LIMIT 1")
+    .bind(owner, "owner")
+    .first();
+  return !!row && emails.includes(row.email.toLowerCase());
+}
+export async function hasKey(owner: string) {
+  return !!(
+    (await sharedKeyAllowed(owner)) ||
+    (await db()
+      .prepare("SELECT owner FROM credentials WHERE owner=?")
+      .bind(owner)
+      .first())
+  );
+}
+export async function payload(
+  s: State,
+  revision: number,
+  user: any,
+  role: Role,
+  access: string,
+  owner: string,
+) {
+  const safe = filtered(s, role, access);
+  return {
+    state: safe,
+    revision,
+    user: { name: user.name, email: user.email, role },
+    provider: { configured: await hasKey(owner), ...models },
+    derived:
+      role === "adviser"
+        ? {
+            ...derive(safe),
+            sponsorSummary: {
+              peopleReady: s.people.filter((p) => p.status === "accepted")
+                .length,
+              openActions: s.tasks.filter((t) => t.status !== "complete")
+                .length,
+            },
+          }
+        : derive(safe),
+  };
+}
+export function fail(e: any) {
+  return Response.json(
+    {
+      error:
+        e instanceof DomainError
+          ? e.message
+          : e.status
+            ? e.message
+            : "The request could not be completed. Your plan has not been changed.",
+    },
+    { status: e.status || 500, headers: { "Cache-Control": "no-store" } },
+  );
+}
+export function checkOrigin(req: Request) {
+  const o = req.headers.get("origin");
+  if (o && o !== new URL(req.url).origin)
+    throw Object.assign(new Error("Cross-origin writes are rejected."), {
+      status: 403,
+    });
+}
+export async function body(req: Request, max = 300000) {
+  checkOrigin(req);
+  if (!req.headers.get("content-type")?.includes("application/json"))
+    throw new DomainError("Expected a JSON request.");
+  const reader = req.body?.getReader();
+  if (!reader) throw new DomainError("Empty request.");
+  let size = 0,
+    parts: Uint8Array[] = [];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.length;
+    if (size > max) {
+      await reader.cancel();
+      throw Object.assign(new Error("Request is too large."), { status: 413 });
+    }
+    parts.push(value);
+  }
+  let all = new Uint8Array(size),
+    i = 0;
+  for (const p of parts) {
+    all.set(p, i);
+    i += p.length;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(all));
+  } catch {
+    throw new DomainError("Invalid JSON.");
+  }
+}
+function base64(a: Uint8Array) {
+  return btoa(String.fromCharCode(...a));
+}
+function bytes(s: string) {
+  return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+}
+async function master() {
+  const s = runtime().KEY_ENCRYPTION_SECRET;
+  if (!s)
+    throw Object.assign(
+      new Error("Private encryption is not configured. Contact the operator."),
+      { status: 503 },
+    );
+  return crypto.subtle.importKey("raw", bytes(s), "AES-GCM", false, [
+    "encrypt",
+    "decrypt",
+  ]);
+}
+export async function encrypt(data: Uint8Array, context: string) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv, additionalData: new TextEncoder().encode(context) },
+    await master(),
+    Uint8Array.from(data).buffer,
+  );
+  return { iv: base64(iv), ciphertext: new Uint8Array(encrypted) };
+}
+export async function decrypt(
+  ciphertext: Uint8Array,
+  iv: string,
+  context: string,
+) {
+  return new Uint8Array(
+    await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: bytes(iv),
+        additionalData: new TextEncoder().encode(context),
+      },
+      await master(),
+      Uint8Array.from(ciphertext).buffer,
+    ),
+  );
+}
+export async function putKey(owner: string, key: string) {
+  const encrypted = await encrypt(
+    new TextEncoder().encode(key),
+    `credential:${owner}`,
+  );
+  await db()
+    .prepare(
+      "INSERT INTO credentials(owner,ciphertext,iv,updated_at) VALUES(?,?,?,?) ON CONFLICT(owner) DO UPDATE SET ciphertext=excluded.ciphertext,iv=excluded.iv,updated_at=excluded.updated_at",
+    )
+    .bind(
+      owner,
+      base64(encrypted.ciphertext),
+      encrypted.iv,
+      new Date().toISOString(),
+    )
+    .run();
+}
+export async function getKey(owner: string) {
+  if (await sharedKeyAllowed(owner)) return runtime().META_API_KEY;
+  const row: any = await db()
+    .prepare("SELECT ciphertext,iv FROM credentials WHERE owner=?")
+    .bind(owner)
+    .first();
+  if (!row)
+    throw new DomainError(
+      "Connect a Meta API key in Settings before asking AI to review source text.",
+    );
+  return new TextDecoder().decode(
+    await decrypt(bytes(row.ciphertext), row.iv, `credential:${owner}`),
+  );
+}
+export async function sha(text: string | Uint8Array) {
+  const b = typeof text === "string" ? new TextEncoder().encode(text) : text;
+  return Array.from(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", Uint8Array.from(b).buffer),
+    ),
+  )
+    .map((x) => x.toString(16).padStart(2, "0"))
+    .join("");
+}

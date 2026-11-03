@@ -1,9 +1,67 @@
-import {sqliteTable,text,integer,primaryKey} from 'drizzle-orm/sqlite-core';
-export const households=sqliteTable('households',{id:text('id').primaryKey(),owner:text('owner').notNull().unique(),state:text('state').notNull(),revision:integer('revision').notNull().default(1),updatedAt:text('updated_at').notNull()});
-export const members=sqliteTable('members',{household:text('household').notNull(),user:text('user').notNull(),role:text('role').notNull(),access:text('access').notNull(),email:text('email').notNull()},t=>[primaryKey({columns:[t.household,t.user]})]);
-export const invitations=sqliteTable('invitations',{tokenHash:text('token_hash').primaryKey(),household:text('household').notNull(),email:text('email').notNull(),role:text('role').notNull(),access:text('access').notNull(),expiresAt:text('expires_at').notNull(),acceptedBy:text('accepted_by')});
-export const credentials=sqliteTable('credentials',{owner:text('owner').primaryKey(),ciphertext:text('ciphertext').notNull(),iv:text('iv').notNull(),updatedAt:text('updated_at').notNull()});
-export const files=sqliteTable('files',{id:text('id').primaryKey(),household:text('household').notNull(),name:text('name').notNull(),mime:text('mime').notNull(),iv:text('iv').notNull(),sha256:text('sha256').notNull(),size:integer('size').notNull(),createdAt:text('created_at').notNull()});
-export const audit=sqliteTable('audit',{id:text('id').primaryKey(),household:text('household').notNull(),event:text('event').notNull(),createdAt:text('created_at').notNull()});
-export const modelRuns=sqliteTable('model_runs',{id:text('id').primaryKey(),household:text('household').notNull(),startedAt:text('started_at').notNull()});
-export const revisions=sqliteTable('revisions',{id:text('id').primaryKey(),household:text('household').notNull(),revision:integer('revision').notNull(),state:text('state').notNull(),createdAt:text('created_at').notNull()});
+import {
+  sqliteTable,
+  text,
+  integer,
+  primaryKey,
+} from "drizzle-orm/sqlite-core";
+export const households = sqliteTable("households", {
+  id: text("id").primaryKey(),
+  owner: text("owner").notNull().unique(),
+  state: text("state").notNull(),
+  revision: integer("revision").notNull().default(1),
+  updatedAt: text("updated_at").notNull(),
+});
+export const members = sqliteTable(
+  "members",
+  {
+    household: text("household").notNull(),
+    user: text("user").notNull(),
+    role: text("role").notNull(),
+    access: text("access").notNull(),
+    email: text("email").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.household, t.user] })],
+);
+export const invitations = sqliteTable("invitations", {
+  tokenHash: text("token_hash").primaryKey(),
+  household: text("household").notNull(),
+  email: text("email").notNull(),
+  role: text("role").notNull(),
+  access: text("access").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  acceptedBy: text("accepted_by"),
+});
+export const credentials = sqliteTable("credentials", {
+  owner: text("owner").primaryKey(),
+  ciphertext: text("ciphertext").notNull(),
+  iv: text("iv").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+export const files = sqliteTable("files", {
+  id: text("id").primaryKey(),
+  household: text("household").notNull(),
+  name: text("name").notNull(),
+  mime: text("mime").notNull(),
+  iv: text("iv").notNull(),
+  sha256: text("sha256").notNull(),
+  size: integer("size").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+export const audit = sqliteTable("audit", {
+  id: text("id").primaryKey(),
+  household: text("household").notNull(),
+  event: text("event").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+export const modelRuns = sqliteTable("model_runs", {
+  id: text("id").primaryKey(),
+  household: text("household").notNull(),
+  startedAt: text("started_at").notNull(),
+});
+export const revisions = sqliteTable("revisions", {
+  id: text("id").primaryKey(),
+  household: text("household").notNull(),
+  revision: integer("revision").notNull(),
+  state: text("state").notNull(),
+  createdAt: text("created_at").notNull(),
+});
