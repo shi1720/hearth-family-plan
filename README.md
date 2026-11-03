@@ -55,6 +55,8 @@ TEST_BASE_URL=http://127.0.0.1:5176 node tests/api.integration.mjs
 
 Use `scripts/start-api-test.mjs` to start a built test worker with the root `.dev.vars`, source bindings, and local storage. Then run `npm run test:api`. Synthetic test users use the `hearth.test` domain; no email is sent. Live model and PDF-intake paths are verified separately using the original synthetic sample in `fixtures/maria-policy-sample.pdf`.
 
+The CI suite also runs 50 pooled and 50 connection-isolated rejection/read transport pairs with no retries. An early-rejection timeout reproduced in the local Worker proxy was addressed by bounded body draining (300 KB, one second, 256 reads), preserving the original 403. Unit checks cover complete, oversized, stalled and errored streams. The same stress corpus passes after the change; this does not establish a general fix for the related upstream runtime issue.
+
 ## Architecture and access
 
 React/TypeScript UI → Vinext server routes → Cloudflare D1 for records, memberships, revisions and encrypted credentials → R2 for AES-GCM encrypted files. Hosted identity is supplied by the Sites dispatch layer. Do not expose the Worker directly to the internet behind a proxy that permits clients to forge the `oai-authenticated-user-*` headers. Self-hosting requires an authenticated reverse proxy or replacing `identity()` with a verified identity provider.

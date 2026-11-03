@@ -29,7 +29,9 @@ export async function discardRejectedBody(req: Request, maxBytes: number) {
     if (timer) clearTimeout(timer);
     if (reader) {
       if (!reachedEnd) void reader.cancel().catch(() => {});
-      try { reader.releaseLock(); } catch {}
+      try {
+        reader.releaseLock();
+      } catch {}
     }
   }
 }
