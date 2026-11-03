@@ -26,9 +26,27 @@ jobs:
         run: |
           node scripts/start-api-test.mjs > /tmp/hearth-test-worker.log 2>&1 &
           worker_pid=$!
-          trap 'kill "$worker_pid" 2>/dev/null || true' EXIT
+          cleanup() {
+            result=$?
+            trap - EXIT
+            if [ "$result" -ne 0 ]; then
+              echo "Worker diagnostics for the failed integration run:"
+              cat /tmp/hearth-test-worker.log
+            fi
+            kill "$worker_pid" 2>/dev/null || true
+            exit "$result"
+          }
+          trap cleanup EXIT
           for attempt in $(seq 1 30); do
             if curl --max-time 2 -s http://127.0.0.1:5176/api/workspace | head -c 200 | grep -q 'Sign in'; then break; fi
             sleep 1
           done
           npm run test:api
+      - name: Preserve failed Worker diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hearth-worker-diagnostics
+          path: /tmp/hearth-test-worker.log
+          if-no-files-found: ignore
+          retention-days: 7

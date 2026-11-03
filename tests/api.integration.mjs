@@ -1,7 +1,34 @@
 import assert from "node:assert/strict";
 const networkFetch = globalThis.fetch;
-const fetch = (url, init = {}) =>
-  networkFetch(url, { signal: AbortSignal.timeout(15000), ...init });
+let requestSequence = 0;
+const fetch = async (url, init = {}) => {
+  const sequence = ++requestSequence;
+  const started = performance.now();
+  const parsed = new URL(url);
+  // Never log invitation tokens, identities, headers, bodies or response data.
+  const route =
+    parsed.pathname +
+    (parsed.searchParams.has("previewRole")
+      ? `?previewRole=${parsed.searchParams.get("previewRole")}`
+      : "");
+  const label = `HTTP ${sequence} ${init.method || "GET"} ${route}`;
+  console.log(`START ${label}`);
+  try {
+    const response = await networkFetch(url, {
+      signal: AbortSignal.timeout(15000),
+      ...init,
+    });
+    console.log(
+      `END ${label} ${response.status} ${Math.round(performance.now() - started)}ms`,
+    );
+    return response;
+  } catch (error) {
+    console.error(
+      `FAILED ${label} ${Math.round(performance.now() - started)}ms ${error.name}: ${error.message}`,
+    );
+    throw error;
+  }
+};
 const base = process.env.TEST_BASE_URL || "http://127.0.0.1:5176";
 if (!["127.0.0.1", "localhost", "::1"].includes(new URL(base).hostname))
   throw new Error(

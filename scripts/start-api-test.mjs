@@ -31,7 +31,7 @@ const child = spawn(
     "--var",
     "LOCAL_DEMO_AUTH:0",
     "--log-level",
-    "warn",
+    process.env.HEARTH_TEST_LOG_LEVEL || "info",
   ],
   { stdio: "inherit" },
 );
