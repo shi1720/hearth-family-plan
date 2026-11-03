@@ -29,6 +29,7 @@ export function identity(req: Request) {
       id: "local-owner",
       name: "Shivam Gupta",
       email: "local@hearth.test",
+      isDemo: false,
     };
   const id = req.headers.get("oai-authenticated-user-id"),
     email = req.headers.get("oai-authenticated-user-email");
@@ -37,7 +38,14 @@ export function identity(req: Request) {
       new Error("Sign in to open your private family workspace."),
       { status: 401 },
     );
-  return { id, name: email, email: email.toLowerCase() };
+  return {
+    id,
+    name: req.headers.get("x-hearth-bridge-verified") === "1"
+      ? decodeURIComponent(req.headers.get("x-hearth-display-name") || email)
+      : email,
+    email: email.toLowerCase(),
+    isDemo: req.headers.get("x-hearth-bridge-verified") === "1" && req.headers.get("x-hearth-bridge-demo") === "1",
+  };
 }
 export async function load(req: Request, user: ReturnType<typeof identity>) {
   const selected = req.headers
@@ -142,12 +150,15 @@ async function sharedKeyAllowed(owner: string) {
     .split(",")
     .map((x: string) => x.trim().toLowerCase())
     .filter(Boolean);
-  if (!emails.length) return false;
   const row: any = await db()
     .prepare("SELECT email FROM members WHERE user=? AND role=? LIMIT 1")
     .bind(owner, "owner")
     .first();
-  return !!row && emails.includes(row.email.toLowerCase());
+  if (!row) return false;
+  if (emails.includes(row.email.toLowerCase())) return true;
+  if (runtime().PUBLIC_DEMO_AI_ENABLED !== "1" || !owner.startsWith("firebase:") || !row.email.endsWith("@demo.hearth.invalid")) return false;
+  const household: any = await db().prepare("SELECT state FROM households WHERE owner=?").bind(owner).first();
+  return !!household && JSON.parse(household.state).fixture === true;
 }
 export async function hasKey(owner: string) {
   return !!(
@@ -170,7 +181,7 @@ export async function payload(
   return {
     state: safe,
     revision,
-    user: { name: user.name, email: user.email, role },
+    user: { name: user.name, email: user.email, role, isDemo: !!user.isDemo },
     provider: { configured: await hasKey(owner), ...models },
     derived:
       role === "adviser"
@@ -303,7 +314,19 @@ export async function putKey(owner: string, key: string) {
     .run();
 }
 export async function getKey(owner: string) {
-  if (await sharedKeyAllowed(owner)) return runtime().META_API_KEY;
+  if (await sharedKeyAllowed(owner)) {
+    const member: any = await db().prepare("SELECT email FROM members WHERE user=? AND role=? LIMIT 1").bind(owner, "owner").first();
+    if (member?.email.endsWith("@demo.hearth.invalid")) {
+      const configuredLimit = Number(runtime().PUBLIC_DEMO_AI_DAILY_LIMIT || 12);
+      if (!Number.isSafeInteger(configuredLimit) || configuredLimit < 1 || configuredLimit > 24)
+        throw Object.assign(new Error("The shared sample AI allowance is temporarily unavailable. Your records remain available."), { status: 503 });
+      const dailyLimit = configuredLimit;
+      const cutoff = new Date(Date.now() - 86400000).toISOString();
+      const reserved = await db().prepare("INSERT INTO model_runs(id,household,started_at) SELECT ?,?,? WHERE (SELECT count(*) FROM model_runs WHERE household=? AND started_at>?)<?").bind(crypto.randomUUID(), "__public_demo__", new Date().toISOString(), "__public_demo__", cutoff, dailyLimit).run();
+      if (!reserved.meta.changes) throw Object.assign(new Error("The shared sample AI allowance is used for today. Your sample records remain available. Sign in and connect your own Meta key to continue live reviews."), { status: 429 });
+    }
+    return runtime().META_API_KEY;
+  }
   const row: any = await db()
     .prepare("SELECT ciphertext,iv FROM credentials WHERE owner=?")
     .bind(owner)

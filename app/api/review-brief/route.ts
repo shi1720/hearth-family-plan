@@ -10,8 +10,8 @@ export async function GET(req: Request) {
       "HEARTH | FACTUAL BRIEF FOR PROFESSIONAL REVIEW",
       `Prepared ${new Date().toISOString()}`,
       s.fixture
-        ? "FICTIONAL DEMONSTRATION — NOT FOR REAL EXECUTION"
-        : "DRAFT WORKING PAPERS — NOT A WILL, LEGAL OPINION OR EXECUTED INSTRUCTION",
+        ? "FICTIONAL DEMONSTRATION | NOT FOR REAL EXECUTION"
+        : "DRAFT WORKING PAPERS | NOT A WILL, LEGAL OPINION OR EXECUTED INSTRUCTION",
       "",
       `Person: ${s.household.personName}`,
       `Initial jurisdiction: ${s.household.jurisdiction}`,

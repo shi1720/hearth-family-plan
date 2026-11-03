@@ -1,0 +1,22 @@
+{
+  "name": "hearth-isolated-key-policy-test",
+  "main": "./key-policy.worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hearth-key-policy-test",
+      "database_id": "00000000-0000-0000-0000-000000000042"
+    }
+  ],
+  "vars": {
+    "HEARTH_KEY_POLICY_TEST": "synthetic-loopback-only",
+    "META_API_KEY": "SYNTHETIC_SHARED_KEY_NEVER_CALL_A_MODEL",
+    "META_SHARED_EMAILS": "operator@hearth.test",
+    "PUBLIC_DEMO_AI_ENABLED": "1",
+    "PUBLIC_DEMO_AI_DAILY_LIMIT": "12",
+    "LOCAL_DEMO_AUTH": "0",
+    "KEY_ENCRYPTION_SECRET": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  }
+}

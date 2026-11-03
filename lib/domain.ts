@@ -246,42 +246,42 @@ export function ledgerSummary(ledger: any) {
 export const sources = [
   {
     id: "FL-WILL",
-    title: "Florida §732.502 — execution of wills",
+    title: "Florida §732.502 | execution of wills",
     url: "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0700-0799/0732/Sections/0732.502.html",
   },
   {
     id: "FL-ORIGINAL",
-    title: "Florida §732.901 — production of wills",
+    title: "Florida §732.901 | production of wills",
     url: "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0700-0799/0732/Sections/0732.901.html",
   },
   {
     id: "FL-POA",
-    title: "Florida §709.2109 — termination of power of attorney",
+    title: "Florida §709.2109 | termination of power of attorney",
     url: "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0700-0799/0709/Sections/0709.2109.html",
   },
   {
     id: "FL-APPOINTMENT",
-    title: "Florida §733.601 — representative duties commence on appointment",
+    title: "Florida §733.601 | representative duties commence on appointment",
     url: "https://www.leg.state.fl.us/statutes/index.cfm?App_mode=Display_Statute&URL=0700-0799/0733/Sections/0733.601.html",
   },
   {
     id: "NAIC",
-    title: "NAIC — Life Insurance Policy Locator",
+    title: "NAIC | Life Insurance Policy Locator",
     url: "https://content.naic.org/article/learn-how-use-naic-life-insurance-policy-locator",
   },
   {
     id: "IRS",
-    title: "IRS — Tax Exempt Organization Search",
+    title: "IRS | Tax Exempt Organization Search",
     url: "https://www.irs.gov/charities-non-profits/tax-exempt-organization-search",
   },
   {
     id: "DAF",
-    title: "IRS — Donor-advised funds",
+    title: "IRS | Donor-advised funds",
     url: "https://www.irs.gov/charities-non-profits/charitable-organizations/donor-advised-funds",
   },
   {
     id: "NIA",
-    title: "National Institute on Aging — getting your affairs in order",
+    title: "National Institute on Aging | getting your affairs in order",
     url: "https://www.nia.nih.gov/health/advance-care-planning/getting-your-affairs-order-checklist-documents-prepare-future",
   },
 ];

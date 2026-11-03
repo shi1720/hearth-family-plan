@@ -1,0 +1,20 @@
+{
+  "name": "hearth-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "scripts": {
+    "build": "esbuild auth-client.js --bundle --format=esm --platform=browser --target=es2022 --minify --legal-comments=none --outfile=dist/auth-client.js",
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "firebase": "13.2.0",
+    "firebase-admin": "14.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

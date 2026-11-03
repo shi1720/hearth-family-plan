@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import charityProfiles from "@/lib/charity-profiles.json";
 import {
   ArrowDownToLine,
@@ -30,6 +30,8 @@ import {
   X,
 } from "lucide-react";
 type Item = Record<string, any>;
+const ReadOnlyContext = createContext(false);
+async function responseData(response: Response): Promise<any> { try { return await response.json(); } catch { throw new Error(response.status >= 500 ? "The service is temporarily unavailable. Your saved records have not been replaced. Please try again." : "The service returned an unexpected response. Please reload your plan before continuing."); } }
 type View =
   | "Home"
   | "People"
@@ -41,7 +43,7 @@ type View =
 type Workspace = {
   state: Item;
   revision: number;
-  user: { name: string; email: string; role: string };
+  user: { name: string; email: string; role: string; isDemo?: boolean };
   provider: { configured: boolean; model: string };
   derived: Item;
 };
@@ -321,6 +323,7 @@ function Field({
   help?: string;
   required?: boolean;
 }) {
+  const readOnly = useContext(ReadOnlyContext);
   const id = `field-${name}`;
   return (
     <label className="field" htmlFor={id}>
@@ -332,6 +335,7 @@ function Field({
         <select
           id={id}
           value={form[name] ?? ""}
+          disabled={readOnly}
           onChange={(e) => setForm({ ...form, [name]: e.target.value })}
         >
           {options.map(([v, l]) => (
@@ -346,6 +350,7 @@ function Field({
           rows={3}
           required={required}
           value={form[name] ?? ""}
+          readOnly={readOnly}
           onChange={(e) => setForm({ ...form, [name]: e.target.value })}
         />
       ) : (
@@ -354,6 +359,7 @@ function Field({
           type={kind}
           required={required}
           value={form[name] ?? ""}
+          readOnly={readOnly}
           onChange={(e) => setForm({ ...form, [name]: e.target.value })}
         />
       )}{" "}
@@ -394,17 +400,18 @@ export default function Hearth() {
   const [previewRole, setPreviewRole] = useState("owner"),
     [previewAccess, setPreviewAccess] = useState("documents"),
     [ownerAccess, setOwnerAccess] = useState(false);
+  useEffect(()=>{const media=window.matchMedia("(max-width: 760px)");const update=()=>{if(!media.matches)setMobile(false);};media.addEventListener("change",update);return()=>media.removeEventListener("change",update);},[]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const loadSequence = useRef(0);
+  const menuRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!modal) return;
     const previous = document.activeElement as HTMLElement | null;
     const timer = window.setTimeout(() => {
       const dialog = document.querySelector<HTMLElement>(".modal");
-      dialog
-        ?.querySelector<HTMLElement>(
-          "input:not([type=file]),textarea,select,button",
-        )
-        ?.focus();
+      const target = dialog?.querySelector<HTMLElement>("input:not([type=file]):not([disabled]),textarea:not([disabled]),select:not([disabled])") || dialog?.querySelector<HTMLElement>("button:not([disabled])");
+      target?.focus();
     }, 0);
     function key(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -431,7 +438,7 @@ export default function Hearth() {
     return () => {
       clearTimeout(timer);
       document.removeEventListener("keydown", key);
-      previous?.focus();
+      if (previous?.isConnected && previous.getClientRects().length) previous.focus(); else menuRef.current?.focus();
     };
   }, [modal]);
   function showSignIn() {
@@ -444,6 +451,7 @@ export default function Hearth() {
     setInvite(null);
   }
   async function load(roleOverride?: string, accessOverride?: string) {
+    const requestId = ++loadSequence.current;
     const selected = roleOverride || previewRole,
       access = accessOverride || previewAccess;
     if (roleOverride || accessOverride) setData(null);
@@ -454,20 +462,22 @@ export default function Hearth() {
         selected === "owner"
           ? "/api/workspace"
           : `/api/workspace?previewRole=${encodeURIComponent(selected)}&access=${encodeURIComponent(access)}`;
-      const r = await fetch(path, { cache: "no-store" });
+      const r = await fetch(path, { cache: "no-store", signal: AbortSignal.timeout(30000) });
+      if (requestId !== loadSequence.current) return;
       if (r.status === 401) {
         showSignIn();
         return;
       }
-      const j: any = await r.json();
+      const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "Your plan could not be opened.");
       setAuthRequired(false);
+      if (requestId !== loadSequence.current) return;
       setData(j);
       if (selected === "owner") setOwnerAccess(j.user?.role === "owner");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Connection unavailable");
+      if (requestId === loadSequence.current) setError(e instanceof Error && e.name === "TimeoutError" ? "Your plan is taking longer than expected to load. Please try again." : e instanceof Error ? e.message : "Connection unavailable");
     } finally {
-      setBusy("");
+      if (requestId === loadSequence.current) setBusy("");
     }
   }
   useEffect(() => {
@@ -481,7 +491,7 @@ export default function Hearth() {
             showSignIn();
             return;
           }
-          const j: any = await r.json();
+          const j: any = await responseData(r);
           if (!r.ok) throw Error(j.error || "Invitation unavailable");
           setInvite(j);
         })
@@ -489,6 +499,7 @@ export default function Hearth() {
     }
   }, []);
   async function action(name: string, payload: Item = {}): Promise<boolean> {
+    if (!data || busy) return false;
     if (previewRole !== "owner") {
       setError(
         "This is a read-only permission preview. Return to your own view before making changes.",
@@ -512,9 +523,10 @@ export default function Hearth() {
         showSignIn();
         return false;
       }
-      const j: any = await r.json();
+      const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "This change could not be saved.");
       setData(j);
+      if (name === "new-plan") { setView("Home"); setSearch(""); }
       if (j.invitation) setInvitationUrl(j.invitation.url);
       setNotice(j.message || "Saved to your private family plan.");
       return true;
@@ -527,12 +539,16 @@ export default function Hearth() {
   }
   function open(name: string, value: Item = {}) {
     if (!data) return;
+    setMobile(false);
+    if (data.user.isDemo && ["new", "invite"].includes(name)) { setError("Sign in with Google or a verified email to create your own plan or share it. Your private sample remains available to explore."); return; }
     const d =
       name === "read-doc" ? documents.find((d) => d.id === value.id) : null;
     setForm({
       ...defaultForms[name],
       ...(d?.extraction ? { correctedText: d.extraction.text } : {}),
       ...value,
+      ...(name === "task" && value.dueAt ? {dueAt:localInput(value.dueAt)} : {}),
+      ...(name === "claim" && value.deadline ? {deadline:localInput(value.deadline)} : {}),
     });
     setModal(name);
     setError("");
@@ -554,6 +570,7 @@ export default function Hearth() {
     if (nav.some(([n]) => n === next)) setView(next as View);
     setMobile(false);
     setSearch("");
+    window.scrollTo({top:0,behavior:"instant"});
   }
   const state: Item = data?.state || {},
     derived: Item = data?.derived || {},
@@ -568,6 +585,7 @@ export default function Hearth() {
     personName = household.personName || "your family",
     firstName = personName.split(" ")[0],
     role = data?.user?.role || "owner",
+    isDemo = !!data?.user?.isDemo,
     owner = role === "owner" && previewRole === "owner",
     canReview =
       previewRole === "owner" && ["owner", "professional"].includes(role),
@@ -582,12 +600,18 @@ export default function Hearth() {
     ledgerDerived: Item = derived.ledger || {},
     transactions: Item[] = ledger.entries || [];
   const activeDocument = documents.find((d) => d.id === form.id);
+  const canReviewAuthority = previewRole === "owner" && household.stage === "death-reported" && (role === "professional" || (state.fixture && role === "owner"));
+  const modalEditable = !!data && previewRole === "owner" && (modal === "authority" ? canReviewAuthority : ["claim","ledger"].includes(modal) ? canReview : modal === "transaction" ? canRecordMoney : modal === "task" ? ["owner","professional"].includes(role) || (role === "representative" && form.category === "administration" && household.stage === "authority-reviewed") : owner) && !(isDemo && ["new","invite"].includes(modal));
+  const signInPath = `/sign-in?return_to=${encodeURIComponent(inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : "/")}`;
+  async function signOut(){setBusy("sign-out");setError("");try{const r=await fetch("/api/auth/sign-out",{method:"POST"});if(!r.ok)throw Error("We could not sign you out. Please try again.");window.location.assign("/sign-in");}catch(e){setError(e instanceof Error?e.message:"Sign-out is unavailable. Please retry.");}finally{setBusy("");}}
+  useEffect(()=>{if(!mobile&&!modal)return;const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=previous;};},[mobile,modal]);
+  useEffect(()=>{if(!mobile)return;const node=sidebarRef.current;const first=node?.querySelector<HTMLElement>("button:not([disabled]),a[href]");const timer=window.setTimeout(()=>first?.focus(),0);function key(e:KeyboardEvent){if(e.key==="Escape"){setMobile(false);menuRef.current?.focus();return;}if(e.key!=="Tab")return;const nodes=Array.from(node?.querySelectorAll<HTMLElement>("button:not([disabled]),a[href]")||[]);const start=nodes[0],end=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===start){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();start?.focus();}}document.addEventListener("keydown",key);return()=>{clearTimeout(timer);document.removeEventListener("keydown",key);};},[mobile]);
   async function loadAccess() {
-    if (!owner || previewRole !== "owner") return;
+    if (!owner || isDemo || previewRole !== "owner") return;
     setAccessBusy("load");
     try {
       const r = await fetch("/api/access", { cache: "no-store" });
-      const j: any = await r.json();
+      const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "Access records could not be loaded.");
       setAccessData(j);
     } catch (e) {
@@ -597,10 +621,10 @@ export default function Hearth() {
     }
   }
   useEffect(() => {
-    if (view === "People" && owner && previewRole === "owner") loadAccess();
-  }, [view, owner, previewRole, data?.revision]);
+    if (view === "People" && owner && !isDemo && previewRole === "owner") loadAccess();
+  }, [view, owner, isDemo, previewRole, data?.revision]);
   async function changeAccess() {
-    if (!accessConfirm || !owner || previewRole !== "owner") return;
+    if (!accessConfirm || !owner || isDemo || previewRole !== "owner") return;
     setAccessBusy(accessConfirm.action);
     setError("");
     try {
@@ -609,7 +633,7 @@ export default function Hearth() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...accessConfirm, revision: data?.revision }),
       });
-      const j: any = await r.json();
+      const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "Access could not be changed.");
       setAccessConfirm(null);
       await load();
@@ -629,8 +653,8 @@ export default function Hearth() {
     );
   async function saveForm(e: React.FormEvent) {
     e.preventDefault();
-    if (previewRole !== "owner") {
-      setError("Return to your own view to make changes.");
+    if (!modalEditable || busy || uploading) {
+      setError(previewRole !== "owner" ? "Return to your own view to make changes." : "This record is read only for your current role.");
       return;
     }
     let ok = false;
@@ -646,6 +670,7 @@ export default function Hearth() {
       ].includes(modal)
     ) {
       const payload = { ...form };
+      if ((modal === "claim" && payload.deadline && Number.isNaN(new Date(payload.deadline).getTime())) || (modal === "task" && payload.dueAt && Number.isNaN(new Date(payload.dueAt).getTime()))) { setError("Enter a valid date and time, or leave the optional deadline empty."); return; }
       if (modal === "claim")
         payload.deadline = payload.deadline
           ? new Date(payload.deadline).toISOString()
@@ -653,7 +678,7 @@ export default function Hearth() {
       if (modal === "task" && payload.dueAt)
         payload.dueAt = new Date(payload.dueAt).toISOString();
       if (modal === "task" && !payload.dueAt) payload.dueAt = null;
-      ok = await action(`save-${modal}`, { [modal]: payload });
+      ok = modal === "task" && role === "representative" && payload.category === "administration" ? await action("record-administration",{taskId:payload.id,evidence:payload.evidence,status:payload.status}) : await action(`save-${modal}`, { [modal]: payload });
     } else if (modal === "ledger")
       ok = await action("save-ledger", {
         openingBalance: form.openingBalance,
@@ -710,7 +735,7 @@ export default function Hearth() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ apiKey: form.apiKey }),
         });
-        const j: any = await r.json();
+        const j: any = await responseData(r);
         if (!r.ok) throw Error(j.error || "Connection could not be saved");
         ok = true;
         await load();
@@ -739,7 +764,7 @@ export default function Hearth() {
       const body = new FormData();
       body.append("file", file);
       const r = await fetch("/api/files", { method: "POST", body });
-      const j: any = await r.json();
+      const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "Upload failed");
       setForm((v) => ({ ...v, fileId: j.fileId, fileName: j.name }));
       setNotice(
@@ -759,7 +784,7 @@ export default function Hearth() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: inviteToken }),
       });
-      const j: any = await r.json();
+      const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "Could not accept invitation");
       setInvite(null);
       history.replaceState({}, "", location.pathname);
@@ -807,7 +832,8 @@ export default function Hearth() {
           onClick={() => setMobile(false)}
         />
       )}
-      <aside className={`sidebar ${mobile ? "open" : ""}`}>
+      <aside id="primary-sidebar" ref={sidebarRef} className={`sidebar ${mobile ? "open" : ""}`} aria-label="Family plan navigation">
+        <button className="icon-button mobile-sidebar-close" aria-label="Close navigation" onClick={()=>{setMobile(false);menuRef.current?.focus();}}><X size={20}/></button>
         <button
           className="brand"
           onClick={() => navigate("Home")}
@@ -870,7 +896,7 @@ export default function Hearth() {
           <button
             className="user-profile"
             disabled={!data}
-            onClick={() => open("provider")}
+            onClick={() => open("preferences", state.preferences)}
           >
             <span className="avatar">{(data?.user?.name || "H")[0]}</span>
             <span>
@@ -891,8 +917,11 @@ export default function Hearth() {
         <header className="topbar">
           <div className="breadcrumb">
             <button
+              ref={menuRef}
               className="icon-button mobile-menu"
               aria-label="Open navigation"
+              aria-expanded={mobile}
+              aria-controls="primary-sidebar"
               onClick={() => setMobile(true)}
             >
               <Menu size={20} />
@@ -998,8 +1027,8 @@ export default function Hearth() {
                 <strong>Something needs attention</strong>
                 <p>{error}</p>
                 {/401|sign.?in|unauth/i.test(error) && (
-                  <a target="_top" href="/signin-with-chatgpt?return_to=%2F">
-                    Sign in with ChatGPT
+                  <a target="_top" href={signInPath}>
+                    Sign in to Hearth
                   </a>
                 )}
                 {/revision/i.test(error) && (
@@ -1074,10 +1103,10 @@ export default function Hearth() {
                     </p>
                     <a
                       className="button sign-in-button"
-                      href={`/signin-with-chatgpt?return_to=${encodeURIComponent(inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : "/")}`}
+                      href={signInPath}
                       target="_top"
                     >
-                      Sign in with ChatGPT <ArrowRight size={16} />
+                      Sign in or explore privately <ArrowRight size={16} />
                     </a>
                     <span className="sign-in-note">
                       <ShieldCheck size={13} /> Your private records load only
@@ -1086,21 +1115,7 @@ export default function Hearth() {
                   </div>
                   <div className="signed-out-art" aria-hidden="true">
                     <div className="welcome-orbit" />
-                    <div className="hearth-illustration">
-                      <div className="sun" />
-                      <div className="arch arch-back" />
-                      <div className="arch arch-front" />
-                      <div className="vase">
-                        <i />
-                        <i />
-                        <i />
-                        <i />
-                      </div>
-                      <div className="floor-line" />
-                      <div className="book book-one" />
-                      <div className="book book-two" />
-                      <span className="illustration-dot" />
-                    </div>
+                    <KeepsakeIllustration />
                     <span className="welcome-heart">
                       <Heart size={28} strokeWidth={1.2} />
                     </span>
@@ -1151,7 +1166,7 @@ export default function Hearth() {
                   </article>
                 </div>
                 <div className="welcome-footnote">
-                  <span>Hearth · Built by Shivam Gupta with AI assistance</span>
+                  <span>Hearth · Private family preparation</span><a className="evaluation-link" href="/evaluation">Evaluation <ArrowUpRight size={11}/></a>
                   <span>
                     Thoughtful preparation. Professional judgment where needed.
                   </span>
@@ -1183,6 +1198,7 @@ export default function Hearth() {
             )
           ) : (
             <>
+              {isDemo && <section className="private-sample-banner"><ShieldCheck size={19}/><div><strong>Your private sample</strong><p>Explore the fictional records and evidence workflows. Sign in with Google or a verified email to create a real plan or invite another person.</p></div><a className="button secondary" href={signInPath}>Sign in for my own plan <ArrowRight size={14}/></a></section>}
               {view === "Home" ? (
                 <>
                   {!owner && (
@@ -1203,7 +1219,7 @@ export default function Hearth() {
                       <h1>
                         {household.mode === "bereaved"
                           ? "We’ll take this one step at a time."
-                          : `Good to see you, ${firstName}.`}
+                          : state.fixture && owner ? `Explore ${firstName}’s family plan.` : owner ? "Your family plan, a little clearer." : "A clear view of the family plan."}
                       </h1>
                       <p>
                         Your wishes, the people you trust, and a few things
@@ -1217,7 +1233,7 @@ export default function Hearth() {
                   <div className="home-grid">
                     <section className="welcome-card">
                       <div className="welcome-copy">
-                        <span className="chapter">A GOOD PLACE TO BEGIN</span>
+                        <span className="chapter">A LITTLE CARE, PUT INTO PLACE</span>
                         <h2>
                           A little preparation.
                           <br />A lot less left unsaid.
@@ -1238,21 +1254,7 @@ export default function Hearth() {
                           No rush. Your progress is saved as you go.
                         </small>
                       </div>
-                      <div className="hearth-illustration" aria-hidden="true">
-                        <div className="sun" />
-                        <div className="arch arch-back" />
-                        <div className="arch arch-front" />
-                        <div className="vase">
-                          <i />
-                          <i />
-                          <i />
-                          <i />
-                        </div>
-                        <div className="floor-line" />
-                        <div className="book book-one" />
-                        <div className="book book-two" />
-                        <span className="illustration-dot" />
-                      </div>
+                      <KeepsakeIllustration />
                     </section>
                     <Panel
                       title="Your plan, at a glance"
@@ -1359,9 +1361,8 @@ export default function Hearth() {
                       </div>
                       <Button
                         secondary
-                        onClick={() =>
-                          owner ? open("invite") : navigate("People")
-                        }
+                        disabled={owner && isDemo}
+                        onClick={() => owner ? open("invite") : navigate("People")}
                       >
                         <Users size={14} />{" "}
                         {owner
@@ -1411,6 +1412,7 @@ export default function Hearth() {
                     canAudit={owner}
                     busy={busy}
                     onAction={action}
+                    onOpenTask={(proposal)=>{const task=tasks.find(t=>t.title===proposal.title&&t.sourceId===proposal.sourceId);if(task)open("task",task);else navigate("People");}}
                   />
                   {state.fixture && (
                     <div className="sample-note">
@@ -1422,6 +1424,7 @@ export default function Hearth() {
                       <button
                         className="text-button"
                         onClick={() => open("new")}
+                        disabled={isDemo}
                       >
                         Start my plan <ArrowRight size={13} />
                       </button>
@@ -1457,6 +1460,7 @@ export default function Hearth() {
                       <button
                         key={v}
                         className={household.mode === v ? "selected" : ""}
+                        disabled={!owner || !!busy}
                         onClick={() =>
                           v === "bereaved"
                             ? navigate("When needed")
@@ -1574,7 +1578,7 @@ export default function Hearth() {
                       </p>
                     </div>
                     {owner && (
-                      <Button secondary onClick={() => open("invite")}>
+                      <Button secondary disabled={isDemo} onClick={() => open("invite")}>
                         <Users size={14} /> Create invitation link
                       </Button>
                     )}
@@ -1633,20 +1637,20 @@ export default function Hearth() {
                     {!people.length && (
                       <Empty
                         icon={Users}
-                        title="Begin with one person."
-                        text="Who could help, and what would they need to know?"
+                        title={owner ? "Begin with one person." : "No people shared in this view."}
+                        text={owner ? "Who could help, and what would they need to know?" : "The owner chooses which contact records this role may see."}
                         action={
-                          <Button onClick={() => open("person")}>
+                          <Button disabled={!owner} onClick={() => open("person")}>
                             <Plus size={14} /> Add someone
                           </Button>
                         }
                       />
                     )}
                   </div>
-                  {owner && previewRole === "owner" && (
+                  {owner && !isDemo && previewRole === "owner" && (
                     <Panel
                       title="Who can access this workspace"
-                      eyebrow="OWNER-CONTROLLED ACCESS — NO EMAILS ARE SENT"
+                      eyebrow="OWNER-CONTROLLED ACCESS - NO EMAILS ARE SENT"
                       action={
                         <button
                           className="text-button"
@@ -1919,10 +1923,10 @@ export default function Hearth() {
                     {!filtered(documents).length && (
                       <Empty
                         icon={FileText}
-                        title="Keep an important document findable."
-                        text="Add an existing record before deciding whether anything needs replacing."
+                        title={search ? "No matching documents." : owner ? "Keep an important document findable." : "No documents shared in this view."}
+                        text={search ? "Try a different title, document type, or location." : owner ? "Add an existing record before deciding whether anything needs replacing." : "Private records remain with the owner. Emergency access is limited to permitted care information."}
                         action={
-                          <Button onClick={() => open("document")}>
+                          <Button disabled={!owner} onClick={() => open("document")}>
                             <Plus size={14} /> Add a document
                           </Button>
                         }
@@ -2039,6 +2043,7 @@ export default function Hearth() {
                     canAudit={owner}
                     busy={busy}
                     onAction={action}
+                    onOpenTask={(proposal)=>{const task=tasks.find(t=>t.title===proposal.title&&t.sourceId===proposal.sourceId);if(task)open("task",task);else navigate("People");}}
                   />
                   {owner && !!state.intakes?.length && (
                     <Panel
@@ -2117,10 +2122,10 @@ export default function Hearth() {
                   {!filtered(accounts).length && (
                     <Empty
                       icon={WalletCards}
-                      title="Start with one account or policy."
-                      text="A known record is a useful beginning. Current coverage and instructions still need confirmation."
+                      title={search ? "No matching accounts or policies." : owner ? "Start with one account or policy." : "No accounts shared in this view."}
+                      text={search ? "Try another account name or institution." : owner ? "A known record is a useful beginning. Current coverage and instructions still need confirmation." : "The owner controls account access. Hidden records are not treated as absent or complete."}
                       action={
-                        <Button onClick={() => open("account")}>
+                        <Button disabled={!owner} onClick={() => open("account")}>
                           <Plus size={14} /> Add an account
                         </Button>
                       }
@@ -2377,10 +2382,10 @@ export default function Hearth() {
                   {!gifts.length && (
                     <Empty
                       icon={Leaf}
-                      title="There’s no need to decide today."
-                      text="If you choose to give, save a cause or recipient here. We do not rank charities or steer your choice."
+                      title={owner ? "There’s no need to decide today." : "No giving intentions shared in this view."}
+                      text={owner ? "If you choose to give, save a cause or recipient here. We do not rank charities or steer your choice." : "Giving decisions can remain private. This view does not reveal whether the owner has saved private intentions."}
                       action={
-                        <Button secondary onClick={() => open("gift")}>
+                        <Button secondary disabled={!owner} onClick={() => open("gift")}>
                           <Plus size={14} /> Save an intention
                         </Button>
                       }
@@ -2451,18 +2456,20 @@ export default function Hearth() {
                         <Button
                           secondary
                           onClick={() => open("death")}
-                          disabled={!owner}
+                          disabled={!owner || !!busy || household.stage !== "living"}
                         >
-                          <FileText size={14} /> Record death report
+                          <FileText size={14} /> {household.stage === "living" ? "Record death report" : "Death report recorded"}
                         </Button>
                         {canReview && (
                           <Button
                             onClick={() => open("authority", state.authority)}
+                            disabled={!canReviewAuthority || !!busy}
                           >
                             <ShieldCheck size={14} /> Record authority review
                           </Button>
                         )}
                       </div>
+                      {!state.fixture && owner && household.stage === "death-reported" && <div className="form-note">A professional member must record the authority review for a real plan. <button className="text-button" onClick={()=>navigate("People")}>Manage professional access <ArrowRight size={13}/></button></div>}
                       <div className="fine-print">
                         Professional-review attestations are recorded evidence,
                         not independent court or registry verification. An
@@ -2521,7 +2528,7 @@ export default function Hearth() {
                   {ledgerVisible ? (
                     <Panel
                       title="Estate money record"
-                      eyebrow="OFFLINE RECORDS — NO FUNDS ARE HELD OR MOVED"
+                      eyebrow="OFFLINE RECORDS - NO FUNDS ARE HELD OR MOVED"
                       action={
                         <div className="button-row ledger-actions">
                           <Button
@@ -2952,6 +2959,7 @@ export default function Hearth() {
               >
                 <header>
                   <h1>Hearth · {household.name}</h1>
+                  {state.fixture && <p>Illustrative records for a fictional family. These records do not establish real execution, payments, or legal authority.</p>}
                   <p>
                     {household.jurisdiction} ·{" "}
                     {statusLabels[household.stage] || household.stage} · View:{" "}
@@ -3045,7 +3053,7 @@ export default function Hearth() {
                 ))}
                 {ledgerVisible && (
                   <>
-                    <h2>Estate money record — no funds moved by Hearth</h2>
+                    <h2>Estate money record - no funds moved by Hearth</h2>
                     <p>
                       Recorded balance{" "}
                       {money(ledgerDerived.recordedBalance, ledger.currency)} ·
@@ -3101,6 +3109,7 @@ export default function Hearth() {
                       {statusLabels[t.status] || t.status}
                       {t.dueAt ? ` · Due ${date(t.dueAt)}` : ""}
                     </p>
+                    {t.detail && <p>Guidance: {t.detail}</p>}{t.sourceQuote && <blockquote>{t.sourceQuote}</blockquote>}
                     <p>{t.evidence || "Completion evidence not recorded"}</p>
                   </article>
                 ))}
@@ -3117,23 +3126,23 @@ export default function Hearth() {
                   </p>
                 ))}
                 <footer>
-                  Hearth · Built by Shivam Gupta with AI assistance. This
+                  Hearth · Private family preparation. This
                   summary contains only records available to the current
                   authorised view.
                 </footer>
               </section>
               <footer className="workspace-footer">
                 <span>
-                  <Heart size={12} /> Hearth · Built by Shivam Gupta with AI
-                  assistance
+                  <Heart size={12} /> Hearth · Private family preparation
                 </span>
+                <a className="evaluation-link" href="/evaluation">Evaluation <ArrowUpRight size={11}/></a>
                 <button
                   disabled={!data}
                   onClick={() => open("preferences", state.preferences)}
                 >
                   Your pace & privacy
                 </button>
-                {owner && (
+                {owner && !isDemo && (
                   <button onClick={() => open("provider")}>
                     {data.provider.configured
                       ? "Meta connected"
@@ -3155,6 +3164,7 @@ export default function Hearth() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
+            aria-describedby={!modalEditable ? "read-only-modal-description" : undefined}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <button
@@ -3166,7 +3176,8 @@ export default function Hearth() {
             </button>
             <p className="eyebrow">YOUR PLAN. YOUR PACE.</p>
             <h2 id="modal-title">{modalTitles[modal]}</h2>
-            <form onSubmit={saveForm}>
+            {!modalEditable && <div id="read-only-modal-description" className="read-only-form-note"><LockKeyhole size={15}/><span>{previewRole !== "owner" ? "This is a read-only permission preview. Return to your owner view to make changes." : "You can review this record. Changes require the appropriate plan role."}</span></div>}
+            <form onSubmit={saveForm}><ReadOnlyContext.Provider value={!modalEditable}>
               {modal === "person" && (
                 <>
                   <Field
@@ -3250,7 +3261,7 @@ export default function Hearth() {
                       form={form}
                       setForm={setForm}
                       options={[
-                        ["draft", "Draft — execution still needed"],
+                        ["draft", "Draft - execution still needed"],
                         ["executed", "Execution evidence recorded"],
                         ["superseded", "Superseded record"],
                       ]}
@@ -3452,7 +3463,7 @@ export default function Hearth() {
                       ],
                       ["approved", "Insurer approval recorded"],
                       ["paid", "Payment receipt recorded"],
-                      ["disputed", "Denied or disputed — professional review"],
+                      ["disputed", "Denied or disputed - professional review"],
                     ]}
                   />
                   <Field
@@ -3503,7 +3514,7 @@ export default function Hearth() {
                       name="currency"
                       form={form}
                       setForm={setForm}
-                      options={[["USD", "USD — initial supported currency"]]}
+                      options={[["USD", "USD - initial supported currency"]]}
                     />
                   </div>
                   <Field
@@ -3544,7 +3555,7 @@ export default function Hearth() {
                       name="currency"
                       form={form}
                       setForm={setForm}
-                      options={[["USD", "USD — initial supported currency"]]}
+                      options={[["USD", "USD - initial supported currency"]]}
                     />
                   </div>
                   <Field
@@ -3619,7 +3630,7 @@ export default function Hearth() {
                     form={form}
                     setForm={setForm}
                     options={[
-                      ["proposed", "Proposed — not completed"],
+                      ["proposed", "Proposed - not completed"],
                       ["confirmed", "Confirmed with external evidence"],
                     ]}
                   />
@@ -3909,7 +3920,7 @@ export default function Hearth() {
                     <span>
                       {activeDocument?.extraction?.status === "accepted"
                         ? "Confirmed source text"
-                        : "Proposed transcription — correct any reading errors"}
+                        : "Proposed transcription - correct any reading errors"}
                     </span>
                     <textarea
                       readOnly={
@@ -4181,7 +4192,7 @@ export default function Hearth() {
                     if you want a copy.
                   </p>
                   <Field
-                    label="Your name"
+                    label="Name of the person this plan is for"
                     name="name"
                     form={form}
                     setForm={setForm}
@@ -4255,9 +4266,8 @@ export default function Hearth() {
                     <button type="button" onClick={() => window.print()}>
                       Print this plan <FileText size={13} />
                     </button>
-                    <a href="/signout-with-chatgpt?return_to=%2F">
-                      Sign out <ArrowUpRight size={13} />
-                    </a>
+                    <a href="/evaluation">Product evaluation <ArrowUpRight size={13}/></a>
+                    <button type="button" disabled={!!busy} onClick={signOut}>Sign out <ArrowUpRight size={13}/></button>
                   </div>
                 </>
               )}
@@ -4321,9 +4331,9 @@ export default function Hearth() {
                     </Button>
                   )}
                 <Button secondary onClick={() => setModal("")}>
-                  Not now
+                  {!modalEditable || (modal === "read-doc" && activeDocument?.extraction?.status === "accepted") ? "Close" : "Not now"}
                 </Button>
-                <Button
+                {modalEditable && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && <Button
                   type="submit"
                   disabled={
                     previewRole !== "owner" ||
@@ -4380,9 +4390,9 @@ export default function Hearth() {
                               : modal === "read-doc"
                                 ? "Accept checked transcription"
                                 : "Save to my plan"}
-                </Button>
+                </Button>}
               </div>
-            </form>
+            </ReadOnlyContext.Provider></form>
           </section>
         </div>
       )}
@@ -4529,12 +4539,14 @@ function ProposalReview({
   canAudit,
   busy,
   onAction,
+  onOpenTask,
 }: {
   proposals: Item[];
   sources: Item[];
   canAudit: boolean;
   busy: string;
   onAction: (action: string, payload: Item) => Promise<boolean>;
+  onOpenTask?: (proposal: Item) => void;
 }) {
   const [showAll, setShowAll] = useState(false);
   const pending = proposals.filter((p) => p.status === "pending");
@@ -4545,7 +4557,7 @@ function ProposalReview({
   return (
     <Panel
       title="Questions and next steps to review"
-      eyebrow="AI PROPOSALS — NOT LEGAL FINDINGS"
+      eyebrow="AI PROPOSALS - NOT LEGAL FINDINGS"
       action={<span className="soft-count">{pending.length} to review</span>}
     >
       <div className="proposals">
@@ -4596,6 +4608,7 @@ function ProposalReview({
                   </small>
                 </details>
               )}
+              {p.status === "accepted" && onOpenTask && <button className="text-button accepted-task-link" onClick={()=>onOpenTask(p)}>Open the next step <ArrowRight size={13}/></button>}
               {p.status === "pending" && (
                 <div className="button-row">
                   <Button
@@ -4666,7 +4679,7 @@ function CharityExplorer({
   return (
     <Panel
       title="Explore education causes"
-      eyebrow="A SMALL SET OF SOURCES — NOT A RANKING"
+      eyebrow="A SMALL SET OF SOURCES - NOT A RANKING"
       className="charity-explorer"
     >
       <p className="muted charity-explorer-intro">
@@ -4809,3 +4822,5 @@ function CharityExplorer({
     </Panel>
   );
 }
+
+function KeepsakeIllustration(){return <div className="keepsake-illustration" aria-hidden="true"><div className="keepsake-shadow"/><div className="keepsake-paper back"><span>PEOPLE & WISHES</span><i/><i/><i/></div><div className="keepsake-paper front"><span className="keepsake-emblem"><Heart size={19} strokeWidth={1.4}/></span><strong>For the people<br/>you love.</strong><div className="keepsake-rule"/><small>THE IMPORTANT THINGS,<br/>THOUGHTFULLY SHARED</small></div><div className="keepsake-envelope"><div className="envelope-fold left"/><div className="envelope-fold right"/><div className="envelope-fold bottom"/><span className="envelope-seal"><Heart size={16} strokeWidth={1.5}/></span></div><span className="keepsake-ribbon"/></div>}

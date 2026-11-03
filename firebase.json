@@ -1,0 +1,8 @@
+{
+  "hosting": {
+    "site": "hearth-family-plan",
+    "public": "firebase-public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{"source":"**","run":{"serviceId":"hearth-family-gateway","region":"us-central1"}}]
+  }
+}

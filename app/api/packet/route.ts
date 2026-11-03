@@ -18,8 +18,8 @@ export async function GET(req: Request) {
       `HEARTH | INSURANCE CLAIM PREPARATION PACKET`,
       `Prepared ${new Date().toISOString()}`,
       s.fixture
-        ? "FICTIONAL DEMONSTRATION — DO NOT SUBMIT"
-        : "DRAFT FOR AUTHORISED REVIEW — NOT AN INSURER CLAIM FORM",
+        ? "FICTIONAL DEMONSTRATION | DO NOT SUBMIT"
+        : "DRAFT FOR AUTHORISED REVIEW | NOT AN INSURER CLAIM FORM",
       "",
       `Person: ${s.household.personName}`,
       `Claimant: ${claim.claimant}`,
@@ -30,16 +30,16 @@ export async function GET(req: Request) {
       "",
       `SEPARATE CLAIMANT AUTHORITY`,
       claim.claimantAuthority ||
-        "MISSING — confirm the claimant and their entitlement with the insurer. An estate role alone does not establish this.",
+        "MISSING | confirm the claimant and their entitlement with the insurer. An estate role alone does not establish this.",
       "",
       `INSURER REQUIREMENTS`,
       claim.requirements ||
-        "MISSING — request the current checklist and required forms from the insurer.",
+        "MISSING | request the current checklist and required forms from the insurer.",
       "",
       `NEXT ACTION`,
       claim.nextAction ||
         "Confirm the insurer-specific process and the authorised owner of the next step.",
-      `Recorded deadline: ${claim.deadline || "Not recorded — confirm any actual deadline."}`,
+      `Recorded deadline: ${claim.deadline || "Not recorded | confirm any actual deadline."}`,
       "",
       `SUBMISSION EVIDENCE`,
       claim.submissionEvidence ||

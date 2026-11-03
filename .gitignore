@@ -46,3 +46,7 @@ yarn-error.log*
 
 .test-wrangler.json
 !.env.example
+
+# Gateway dependencies and generated browser bundle
+/gateway/node_modules/
+/gateway/dist/

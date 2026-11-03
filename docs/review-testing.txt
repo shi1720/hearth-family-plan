@@ -1,0 +1,69 @@
+HEARTH REVIEW GUIDE
+A friendly walkthrough for Shivam. Use the supplied final app link and the local video when they are ready. Do not submit the competition form or upload the video during this review.
+
+START HERE
+1. Open the final verified app link. The planned clean address is hearth-family-plan.web.app, but these instructions do not assert it is deployed. If the handoff still says verification is pending, use the verified link root provides.
+2. Sign in. You should receive your own household workspace, not somebody else's private records. The Maria Ellis scenario should be clearly labeled fictional.
+3. Keep this review in the sample household and use its original synthetic PDF. Do not replace the sample with a new personal plan unless you intend to keep that change. The normal records should remain usable if you skip AI review.
+
+FIVE-MINUTE PRODUCT CHECK
+
+A. Find the problem
+Open the retirement account under Accounts & policies. The old statement names Elena while Maria's recorded wish includes both children. Confirm these remain separate fields and the old statement is not presented as current institution confirmation. Under Documents, notice that a copy of a will is different from a confirmed original location.
+
+B. Follow the source into work
+Attach the supplied synthetic sample PDF to a document record and save it. Choose the attachment-reading action. You must explicitly consent before the document is sent to Meta. Check the returned transcription against the PDF. Correct any text that is wrong before accepting it. Then request the connected-plan review.
+
+Expected: actual model names, source text and proposals are visible. A quoted excerpt must occur in the saved source. You can reject a proposal. Accepting one produces a practical task with its explanation and source; it does not change a beneficiary or execute a document.
+
+If AI is unavailable: record the error and stop the AI step. The app must preserve your previous records. It must not display a fabricated result. The owner may need an authorised Meta connection; never paste an API key into an issue, screenshot, video or chat message.
+
+C. Complete one supported next step
+For the demonstration only, use a clearly marked fictional institution confirmation reference and complete the matching task. Confirm that evidence is visible afterward. Make a material edit to an institution-confirmed account record and check that its previous confirmation needs review. The app must not pretend the edit was an institution-approved change.
+
+D. Check the privacy boundary
+Use the owner's permission preview for a helper with emergency scope. Care information may be visible; private account details and personal wishes should be absent. Label this a preview, not a second person signing in. Return to the owner view before editing anything.
+
+For a fuller two-person check, an owner can generate an email-bound invitation for an actual consenting tester, then share it through an authorised route. The app does not send the invitation automatically. Test only the intended role/scope. Revoking membership or an unused invitation should remove future access. Do not expand real access merely to make a demo easier.
+
+E. Review the later-stage records
+In the fictional scenario, check that Death reported and Authority review recorded are separate. A helper role alone must not open restricted administration. Professional is an invited app role, not an independent credentials check.
+
+Open a sample insurance claim. Check claimant-specific authority, insurer requirements, next action and the exported preparation packet. Confirm that the packet is clearly a draft or fictional preparation record, not an official form that Hearth submitted. Approval must remain distinct from actual payment evidence.
+
+In the estate ledger, a proposed entry should not count as completed money movement. A confirmed outflow must have evidence and cannot consume more than the recorded funds less the held reserve. The arithmetic does not authorise a distribution, and Hearth never moves funds.
+
+F. Keep giving optional
+Explore the source-linked education charity profiles. Check that choosing a recipient prefills an intention, not an executed gift or received donation. Verify that source evidence is described as charity-reported and no ranking, guaranteed tax result or automatic donation is claimed. You may leave giving undecided.
+
+G. Check the buyer's maths
+Open Practice. At an annual fee of $18,000 and $60 per avoidable staff hour, break-even staff-time savings should be 300 hours a year. The 250-household price, staffing assumptions and savings are illustrative. There are no claimed customers or validated savings.
+
+H. Keep a portable copy
+Export your permitted plan and inspect the print summary. It should match your current view's access and contain no API keys. Prior plan versions are available only to the owner. A hash-linked history is useful evidence of the recorded sequence, not notarisation or legal validity.
+
+VIDEO AND CAPTIONS REVIEW
+- Play the final local video from beginning to end with sound. Verify the actual duration is no more than three minutes. A script's target time is not sufficient.
+- The voice should sound conversational, with clear short sentences and no long silent gaps. It should not invent a personal story or claim Maria is a real client.
+- The demo should visibly show the same source, proposal, task and confirmation rather than unrelated success screens.
+- Captions must follow the actual final narration and timings. Check Maria, Elena, Muse Spark, Muse Wonder, the fee, household count and break-even hours carefully.
+- Any shortened AI wait or recorded result must be labeled honestly. A permission preview is a preview. External evidence in the sample is fictional.
+- Make sure text is readable, the cursor is deliberate, and no key, invitation token, private record or browser notification is visible.
+- The local review video and captions are deliverables for your approval. No YouTube upload or form submission is authorised by these instructions.
+
+TECHNICAL CHECKS FOR THE BUILDER
+From the hearth repository, use the commands documented in README:
+  npm test
+  npm run typecheck
+  npm run build
+  npm run test:api
+
+The API suite needs the documented built local test worker and test environment first. Do not run it against a live household. Local synthetic identity headers test downstream application authorisation; they do not prove the final hosted identity provider works. Preserve the latest actual command outputs and tested revision. Do not copy older test counts into the final handoff without rechecking.
+
+Final hosted smoke checks: anonymous API requests rejected; signed-in owner loads and saves a fixture task; a reload preserves it; a permitted file downloads; a disallowed file does not; explicit-consent Meta review returns a real result; role previews and export filtering agree. Run these through the final clean URL if one is used. Never expose a backend that trusts freely forgeable identity headers.
+
+HOW TO REPORT A PROBLEM
+Send the screen/step, expected result, actual result, exact visible error, browser and approximate time. A screenshot with sensitive values removed helps. Avoid sending API credentials or actual family documents. A failed call or blocked access is a finding to fix, not something to hide in the recording.
+
+READY FOR YOUR REVIEW WHEN
+The final app route is verified, the source repository is anonymously readable, the local narrated video and caption file exist and play correctly, the submission fields contain honest final links, and the latest tests are recorded. Production professional-service launch remains a separate decision with real legal/operations providers and security/privacy review.

@@ -72,6 +72,8 @@ export async function POST(req: Request) {
       p = await body(req),
       x = await load(req, user);
     let { state, revision } = x;
+    if (user.isDemo && (["new-plan", "invite"].includes(p.action) || !state.fixture))
+      throw Object.assign(new Error("Sign in with a verified account to create your own plan or invite other people. This private sample is for fictional information."), { status: 403 });
     if (
       x.role === "professional" &&
       x.access !== "administration" &&
@@ -128,7 +130,7 @@ export async function POST(req: Request) {
         p.text.length < 40 ||
         p.text.length > 30000
       )
-        throw new DomainError("Provide 40–30,000 characters of source text.");
+        throw new DomainError("Provide 40-30,000 characters of source text.");
       const r = await analyze(x.owner, state.id, p.text);
       const sourceId = crypto.randomUUID();
       state.intakes = [
@@ -180,7 +182,7 @@ export async function POST(req: Request) {
         );
       if (typeof p.correctedText === "string") {
         if (!p.correctedText.trim() || p.correctedText.length > 30000)
-          throw new DomainError("Corrected text must be 1–30,000 characters.");
+          throw new DomainError("Corrected text must be 1-30,000 characters.");
         d.extraction.text = p.correctedText;
       }
       d.sourceText = d.extraction.text;

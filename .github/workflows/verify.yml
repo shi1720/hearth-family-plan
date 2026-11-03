@@ -10,11 +10,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - name: Verify isolated shared AI key policy
+        run: node tests/key-policy.integration.mjs
+      - name: Verify Firebase gateway
+        run: |
+          npm ci --prefix gateway
+          npm run build --prefix gateway
+          node --test tests/gateway.test.mjs
       - run: npm run build
       - name: Create ephemeral local encryption secret
         run: node -e "require('fs').writeFileSync('.dev.vars', 'KEY_ENCRYPTION_SECRET='+require('crypto').randomBytes(32).toString('base64')+'\nLOCAL_DEMO_AUTH=0\n')"

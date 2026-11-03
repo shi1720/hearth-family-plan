@@ -1,0 +1,26 @@
+Hearth: a plan your people can use
+
+What inspired the project
+A family can have a signed document and still have an unfinished plan. The original may be hard to find. An old beneficiary record may disagree with the person's current wishes. The person willing to help may not know which records they are allowed to see. Hearth starts with that practical gap between having paperwork and being ready to use it.
+
+What Hearth does
+Hearth connects people, important originals, account and life-policy records, optional giving and evidence-backed next steps. The fictional Maria Ellis scenario makes the problem concrete: a will copy exists, its original is not located, and an old retirement statement names one child while her recorded wish includes both. The application preserves the difference between a wish and the institution's current instruction.
+
+Meta Muse Spark 1.3 reads a consented PDF or image. The owner checks the proposed transcription against the original before accepting it. Muse Wonder 1.0 reviews connected records and proposes practical follow-ups with exact source quotes. A person accepts or rejects each proposal. Accepting creates a task with its explanation and evidence, rather than changing a legal instrument.
+
+Permissions, execution evidence and state changes are enforced by code. A helper can see permitted care information without receiving private accounts or personal wishes. Reporting a death does not establish a representative's authority. Insurance preparation, submission, approval and actual payment remain separate. Bookkeeping preserves proposed versus confirmed entries and a reserve. Giving remains optional and an intention does not become a donation merely because it was saved.
+
+How it was built
+Shivam Gupta directed and built the original application during this event with substantial AI-assisted research, implementation and testing. The interface uses React and TypeScript. Firebase Hosting provides the clean application address, with Firebase authentication and a dedicated Cloud Run gateway. The gateway verifies identity, encrypts the browser session and household selection, strips untrusted identity headers, and signs the request to the backend. The backend retains D1 records, encrypted R2 attachments, revisions and source provenance. Framework and model dependencies are credited separately in the public repository.
+
+What we learned
+A correct source quote is useful evidence, but it does not prove that an interpretation is correct. An AI proposal also needs an accountable person, the right permissions, an authorised external process and evidence of completion. Material changes must invalidate earlier confirmations. An evaluation should be able to show a failure, so our evaluator tests deliberately weakened rules as well as the normal implementation. The public evaluation view executes synthetic contracts against the actual domain functions and exposes the observed results. Its optional live-model checks are clearly separated from human judgement about legal meaning.
+
+Challenges
+Incomplete structured responses needed explicit rejection and an appropriate model output budget. A repeated local Worker transport timeout after rejected requests required bounded body draining and unchanged regression tests. Firebase Hosting forwards a single session cookie, so household selection had to live inside the authenticated encrypted session rather than a second browser cookie. These issues were handled as testable failure paths rather than hidden behind optimistic status badges.
+
+Why this can be a business
+The first proposed buyer is an independent advice firm with continuing household coordination work. The proposed annual package is $18,000 for 250 households, with bounded operations and separately scoped professional services. At an assumed $60 per genuinely avoidable staff hour, the fee needs 300 annual hours saved if labour alone justifies it. These are testable business assumptions, not claimed revenue, customers or measured savings. The next commercial step is a priced pilot that counts the full cost of human review and follow-through.
+
+Scope
+The demonstration uses original synthetic records and clearly fictional external confirmations. Initial workflow guidance is scoped to Florida and links to primary sources. Hearth does not execute wills, certify capacity or authority, provide legal representation, submit court or insurance forms, make donations or move money. Real services require qualified people, appropriate engagements and reviewed security and operating arrangements.

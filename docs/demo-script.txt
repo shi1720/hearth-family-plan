@@ -1,8 +1,8 @@
-HEARTH — THREE-MINUTE DEMO
+HEARTH | THREE-MINUTE DEMO
 Verbatim narration and separate shot list
 Prepared for Shivam Gupta
 
-NARRATION — 3:00 target
+NARRATION | 3:00 target
 
 Having a will does not mean the people you love can carry out your wishes. The original might be missing. A beneficiary instruction might be outdated. A trusted helper might not know what they are allowed to see.
 
@@ -28,20 +28,20 @@ Our proposed buyer is an independent advice firm: eighteen thousand dollars annu
 
 Hearth does not execute wills, file claims, or replace professionals. It helps families know what is ready, what is private, and what still needs doing.
 
-SHOT LIST — NOT SPOKEN
+SHOT LIST | NOT SPOKEN
 
-0:00–0:17  Open Home: Maria's fictional scenario label and three concrete next steps. Slow, readable framing; no dramatic stock imagery or fabricated personal anecdote.
-0:17–0:29  Show product name and builder identity. Keep fictional scenario label visible.
-0:29–0:48  Accounts & policies: retirement account's old statement and desired arrangement. Show “From a document,” not institution-confirmed.
-0:48–1:13  Documents: upload the rights-cleared example PDF; show explicit Meta consent; returned transcription; compare/check and accept. Show live model identity. If processing is edited out, caption “AI processing shortened” and retain the actual returned result. Do not imply an instantaneous call.
-1:13–1:31  Cross-record review: show actual Muse Wonder proposal with exact quote and source ID. Accept one useful nonduplicate proposal. Show resulting task detail/provenance, not just a toast. If live output differs, follow the actual supported action rather than fabricate the scripted wording.
-1:31–1:46  Permission preview: label clearly “Owner preview of Elena's helper access.” Show permitted care record, absent private financial/wish records. Return to owner view. This is a preview, not a claim Elena signed in.
-1:46–2:01  Record fictional institution confirmation evidence and complete the associated task. Show evidence reference. Demonstrate a material edit reopening review if it can fit without rushing; otherwise show the relevant status behavior in supplementary walkthrough.
-2:01–2:13  When needed: move the fictional case through death reported, then separate recorded authority review. Keep the fixture/simulation label visible. Do not suggest real death or professional identity verification occurred.
-2:13–2:32  Claims & benefits: show separately recorded claimant authority, insurer checklist, preparation packet export, and existing fixture submission/payment receipt evidence. Downloads are preparation text, not official insurer forms. All external confirmations are fictional records for this demo; no insurer is contacted.
-2:32–2:45  Estate money record: confirmed balance versus proposed transaction and reserve. Giving: show intention state with no receipt. No donation checkout or movement of funds.
-2:45–2:54  Practice: proposed $18,000/250-household service; editable assumptions and no-customer-validation label. Keep fee visible long enough to read.
-2:54–3:00  Home/end card: “Know what is ready. Keep what is private. Finish the next step.” Display the actual deployed URL/repository only after final verification.
+0:00-0:17  Open Home: Maria's fictional scenario label and three concrete next steps. Slow, readable framing; no dramatic stock imagery or fabricated personal anecdote.
+0:17-0:29  Show product name and builder identity. Keep fictional scenario label visible.
+0:29-0:48  Accounts & policies: retirement account's old statement and desired arrangement. Show “From a document,” not institution-confirmed.
+0:48-1:13  Documents: upload the rights-cleared example PDF; show explicit Meta consent; returned transcription; compare/check and accept. Show live model identity. If processing is edited out, caption “AI processing shortened” and retain the actual returned result. Do not imply an instantaneous call.
+1:13-1:31  Cross-record review: show actual Muse Wonder proposal with exact quote and source ID. Accept one useful nonduplicate proposal. Show resulting task detail/provenance, not just a toast. If live output differs, follow the actual supported action rather than fabricate the scripted wording.
+1:31-1:46  Permission preview: label clearly “Owner preview of Elena's helper access.” Show permitted care record, absent private financial/wish records. Return to owner view. This is a preview, not a claim Elena signed in.
+1:46-2:01  Record fictional institution confirmation evidence and complete the associated task. Show evidence reference. Demonstrate a material edit reopening review if it can fit without rushing; otherwise show the relevant status behavior in supplementary walkthrough.
+2:01-2:13  When needed: move the fictional case through death reported, then separate recorded authority review. Keep the fixture/simulation label visible. Do not suggest real death or professional identity verification occurred.
+2:13-2:32  Claims & benefits: show separately recorded claimant authority, insurer checklist, preparation packet export, and existing fixture submission/payment receipt evidence. Downloads are preparation text, not official insurer forms. All external confirmations are fictional records for this demo; no insurer is contacted.
+2:32-2:45  Estate money record: confirmed balance versus proposed transaction and reserve. Giving: show intention state with no receipt. No donation checkout or movement of funds.
+2:45-2:54  Practice: proposed $18,000/250-household service; editable assumptions and no-customer-validation label. Keep fee visible long enough to read.
+2:54-3:00  Home/end card: “Know what is ready. Keep what is private. Finish the next step.” Display the actual deployed URL/repository only after final verification.
 
 RECORDING NOTES
 - Rehearse at approximately 130 words/minute. The narrator may continue speaking while forms are filled; use prepared fictional fields so no private data enters the recording.

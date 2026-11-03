@@ -1,0 +1,66 @@
+HEARTH REVIEW STORY
+Local review package only. Do not submit the form or upload a video.
+
+Narration source: docs/review-narration.txt
+Target: approximately 2:54, including a short final card, never over 3:00.
+Style: warm and direct. Short sentences, conversational pace, no long pauses. Do not announce a competition or describe the product as a competition project in the narration. Do not invent a personal bereavement story or customer endorsement.
+
+CORE STORY
+A family has documents, but documents alone do not finish the work. Maria's original will has not been located, and an old beneficiary record differs from her current wish. Hearth uses Meta to help read the evidence and prepare practical next steps. People check the output, control access and record the outside confirmation. The demonstration must show this one connected outcome before showing supporting claims, bookkeeping and giving capabilities.
+
+EXACT SHOT AND NARRATION PAIRS
+Use the numbered paragraphs in review-narration.txt. Timecodes below are editing targets. After the actual voice is generated, align cuts and captions to the spoken words rather than forcing silence to fill a segment.
+
+00:00-00:12 | Narration paragraph 1
+Home, with Maria's fictional scenario label visible. Frame the three next steps and original-document problem. A simple opening caption may read: “A plan your people can use.” No staged real family photo or invented testimonial.
+
+00:12-00:32 | Narration paragraph 2
+Home to Accounts & policies. Open the retirement record and show the old statement instruction beside Maria's intended arrangement. Show “From a document,” not “Institution confirmed.” Caption: “Fictional family and records.”
+
+00:32-00:40 | Narration paragraph 3
+Hold the two different instructions long enough to read. The app must not change a beneficiary designation. Avoid a green legal-validity badge.
+
+00:40-01:00 | Narration paragraph 4
+Documents. Attach the original synthetic sample PDF, show the explicit Meta consent, then the actual returned Spark transcription. Compare it with the PDF and accept the checked text. Transition to the actual Wonder cross-record review. If a model call takes longer, shorten the wait with the caption “AI processing shortened.” Preserve the real result; do not fake a response or imply instant processing.
+
+01:00-01:13 | Narration paragraph 5
+Show a relevant, actual returned proposal with its exact source quote. Accept it. Open the resulting task and show its explanation/source still attached. Do not substitute an invented proposal if the live model chooses different wording. Select a useful nonduplicate proposal from the actual result.
+
+01:13-01:24 | Narration paragraph 6
+Complete the matching follow-up with an explicit fictional institution reference. Show the confirmation state and completion evidence. If materially editing the account, show it returning to review, never falsely retaining the bank's confirmation. Caption external evidence as “Fictional institution response.”
+
+01:24-01:41 | Narration paragraph 7
+Select the owner preview of Elena's emergency/helper access. Show the permitted care record and absent private account/wish records. Caption “Permission preview.” Return to the owner view. This is not a claim that Elena is signed in or that a professional credential has been verified.
+
+01:41-01:53 | Narration paragraph 8
+When needed. Show “Death reported” separately from “Authority review recorded,” with the fixture label visible. A helper invitation is not an appointment. Do not suggest a real certificate, identity, or court document was verified by Hearth.
+
+01:53-02:14 | Narration paragraph 9
+Show a prepared fictional insurance claim, its separate claimant authority and insurer-specific requirements. Export the actual text preparation packet. Briefly show distinct submission, approval and payment evidence. Then show the estate ledger: proposed versus confirmed entries and a reserve. These are fictional records of outside actions. No bank, insurer or court is contacted; no funds move.
+
+02:14-02:23 | Narration paragraph 10
+Giving. Show the optional neutral charity profiles and official evidence links. Prefill and save an intention only. Do not claim a recipient has received funds or been independently certified. No checkout is completed.
+
+02:23-02:45 | Narration paragraph 11
+Practice. Show $18,000 per year, 250 households and the calculator's $60/hour assumption. Set or show 300 break-even hours. Keep the “proposed / not validated” label visible. This is a buying hypothesis, not revenue, actual savings or existing customers.
+
+02:45-02:54 | Narration paragraph 12
+Return to Home or a simple end card. Caption: “Find what matters. Share what is needed. Finish the next step.” Show only a verified current app URL. Do not display a planned hostname as deployed.
+
+BEFORE RECORDING
+- Use only the original synthetic example PDF and fictional household records. No real identity, health, financial or family data.
+- Prepare the claim and estate records so the short video shows real application screens, not a long sequence of form typing. Record and label simulated external evidence honestly.
+- Do not populate contradictory “paid” or “confirmed” states just to get green screens. Respect the actual prerequisites and preserve the evidence references.
+- Record the real live Meta result first. A failed call needs a retry or a clearly labeled explanation, never a fabricated success.
+- Make body text and quotes readable in the final 1080p file. Deliberate cursor movement, restrained transitions, no decorative motion that obscures evidence.
+- Remove credentials, invite tokens, browser notifications and unrelated tabs from the recording.
+- Review final audio, frame timing, captions and total media duration. The text word count alone cannot prove the video is under three minutes.
+
+RELEASE STATUS NOTES FOR THE PRODUCER
+The clean Firebase hostname hearth-family-plan.web.app is planned, not verified by these documents. Root must confirm deployment and end-to-end auth/API behavior before this URL is printed as live. A successful static landing page is not proof that sign-in, persistence, files and Meta calls work through the final route.
+
+YouTube upload and competition submission are outside this preparation task. Deliver the finished local video, separate caption file, draft metadata and draft submission for Shivam's review. Keep public video URL pending until the user explicitly chooses to publish.
+
+INDEPENDENT READINESS ASSESSMENT
+Strengths: an understandable family problem, real multimodal and cross-record Meta use, source-linked reviewable tasks, meaningful privacy/state rules, and a specific recurring institutional buyer with explicit economics.
+Remaining proof: the final clean-hostname journey, actual final video and captions, public repository/link accessibility, and latest executed validation results. No customer or paid pilot validates the proposed price. A polished coordination app is not yet an operating professional estate service. Avoid an all-screens tour that makes the central discrepancy-to-confirmation outcome hard to follow. No official numerical judging score is asserted.

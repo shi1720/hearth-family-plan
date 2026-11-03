@@ -1,4 +1,4 @@
-HEARTH — SUBMISSION COPY
+HEARTH | SUBMISSION COPY
 Prepared for Shivam Gupta | Meta Global AI Developer Hackathon
 Copy only the fields requested by the actual submission form. Confirm deployed URLs, repository visibility and final test results before submitting. No application, customer, legal-review or deployment status is invented below.
 
@@ -9,7 +9,7 @@ ONE-LINE DESCRIPTION
 A private family workspace that turns scattered estate and household records into permission-aware next steps, evidence-backed handovers, and a clear record of what remains unfinished.
 
 SHORT PITCH
-Having a will is not the same as having a plan people can use. Hearth connects documents, originals, account instructions, helpers, insurance claims and optional giving—then shows what is recorded, what needs confirmation and what has actually been completed. Meta models help read and review; people retain consequential decisions.
+Having a will is not the same as having a plan people can use. Hearth connects documents, originals, account instructions, helpers, insurance claims and optional giving-then shows what is recorded, what needs confirmation and what has actually been completed. Meta models help read and review; people retain consequential decisions.
 
 PROBLEM
 Families can have signed documents and still face practical failures: nobody can locate the original will; a retirement statement names a different beneficiary from the person's present wish; an old employer insurance certificate is mistaken for current cover; a nominated helper is confused with a legally appointed representative. Advice-firm staff often coordinate these records across clients, relatives, institutions and professionals.
@@ -54,7 +54,7 @@ Initial buyer: an independent financial-advice firm with recurring household coo
 
 Pricing hypothesis: $18,000 annually for a bounded readiness service covering 250 households, equivalent to $72 per household per year. Proposed cohort onboarding is $15,000; separately scoped after-death administrative work starts at $3,000. These are proposed prices, not booked revenue. Legal representation, tax advice, execution providers, complex assets and substantial professional work require separate engagements and funding.
 
-At an assumed $60 of genuinely avoidable staff cost per hour, the annual readiness fee requires 300 avoided hours across the cohort—1.2 hours per household—if labour savings alone justify purchase. The app exposes editable assumptions rather than presenting this as measured savings. Total delivery effort must include vendor operations and professional time; expensive exceptions cannot be hidden behind low model-token costs.
+At an assumed $60 of genuinely avoidable staff cost per hour, the annual readiness fee requires 300 avoided hours across the cohort-1.2 hours per household-if labour savings alone justify purchase. The app exposes editable assumptions rather than presenting this as measured savings. Total delivery effort must include vendor operations and professional time; expensive exceptions cannot be hidden behind low model-token costs.
 
 Validation status: no paying customers, validated acquisition costs or measured customer savings are claimed. The next commercial test is a costed pilot with an advice firm using consenting households and its existing professionals. Measure confirmed arrangements, family effort, staff time, unresolved tasks and complete-cycle cost against the firm's current tools and providers. Established estate-planning and administration competitors already exist; superior execution and distribution must be earned.
 
@@ -72,7 +72,7 @@ Shivam Gupta selected and directed the product, set its commercial and user requ
 
 Existing framework dependencies, infrastructure, source references and model services are credited in the repository; they are not claimed as original inventions. The demonstration should highlight only functionality actually created during this event. The previous ReleaseProof direction is not part of the Hearth submission.
 
-LIMITATIONS — INCLUDE WHERE THE FORM ALLOWS
+LIMITATIONS | INCLUDE WHERE THE FORM ALLOWS
 Hearth is software for organising and tracking permitted work. It does not act as a law firm, personal representative, bank, insurer, notary, tax adviser or qualified electronic-will custodian. It does not execute wills, verify legal capacity, decide inheritance disputes, independently certify identities or legal authority, submit court/insurance forms, discover every policy, guarantee cover, make donations or move estate money.
 
 A recorded professional role is a membership role, not an independent check of professional qualifications. A recorded authority review captures evidence and responsibility; it is not a court or platform certification. All people, institutions and external confirmations in the main demo are fictional and labeled accordingly.
