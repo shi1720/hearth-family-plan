@@ -442,6 +442,10 @@ export default function Hearth() {
   const menuRef = useRef<HTMLButtonElement>(null);
   const navigationTrigger = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLElement>(null);
+  function closeNavigation() {
+    setMobile(false);
+    window.setTimeout(() => (navigationTrigger.current || menuRef.current)?.focus(), 0);
+  }
   useEffect(() => {
     if (!modal) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -659,7 +663,7 @@ export default function Hearth() {
   const signInPath = `/sign-in?return_to=${encodeURIComponent(inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : "/")}`;
   async function signOut(){setBusy("sign-out");setError("");try{const r=await fetch("/api/auth/sign-out",{method:"POST"});if(!r.ok)throw Error("We could not sign you out. Please try again.");window.location.assign("/sign-in");}catch(e){setError(e instanceof Error?e.message:"Sign-out is unavailable. Please retry.");}finally{setBusy("");}}
   useEffect(()=>{if(!mobile&&!modal)return;const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=previous;};},[mobile,modal]);
-  useEffect(()=>{if(!mobile)return;const node=sidebarRef.current;const first=node?.querySelector<HTMLElement>("button:not([disabled]),a[href]");const timer=window.setTimeout(()=>first?.focus(),0);function key(e:KeyboardEvent){if(e.key==="Escape"){setMobile(false);(navigationTrigger.current || menuRef.current)?.focus();return;}if(e.key!=="Tab")return;const nodes=Array.from(node?.querySelectorAll<HTMLElement>("button:not([disabled]),a[href]")||[]);const start=nodes[0],end=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===start){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();start?.focus();}}document.addEventListener("keydown",key);return()=>{clearTimeout(timer);document.removeEventListener("keydown",key);};},[mobile]);
+  useEffect(()=>{if(!mobile)return;const node=sidebarRef.current;const first=node?.querySelector<HTMLElement>("button:not([disabled]),a[href]");const timer=window.setTimeout(()=>first?.focus(),0);function key(e:KeyboardEvent){if(e.key==="Escape"){closeNavigation();return;}if(e.key!=="Tab")return;const nodes=Array.from(node?.querySelectorAll<HTMLElement>("button:not([disabled]),a[href]")||[]);const start=nodes[0],end=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===start){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();start?.focus();}}document.addEventListener("keydown",key);return()=>{clearTimeout(timer);document.removeEventListener("keydown",key);};},[mobile]);
   async function loadAccess() {
     if (!owner || isDemo || previewRole !== "owner") return;
     setAccessBusy("load");
@@ -891,11 +895,11 @@ export default function Hearth() {
         <button
           className="scrim"
           aria-label="Close navigation"
-          onClick={() => {setMobile(false);(navigationTrigger.current || menuRef.current)?.focus();}}
+          onClick={() => {closeNavigation();}}
         />
       )}
       <aside id="primary-sidebar" ref={sidebarRef} className={`sidebar ${mobile ? "open" : ""}`} aria-label="Family plan navigation" inert={!!modal || (compactNav && !mobile) ? true : undefined} aria-hidden={!!modal || (compactNav && !mobile) ? true : undefined}>
-        <button className="icon-button mobile-sidebar-close" aria-label="Close navigation" onClick={()=>{setMobile(false);(navigationTrigger.current || menuRef.current)?.focus();}}><X size={20}/></button>
+        <button className="icon-button mobile-sidebar-close" aria-label="Close navigation" onClick={()=>{closeNavigation();}}><X size={20}/></button>
         <div className="sidebar-scroll">
         <button
           className="brand"
