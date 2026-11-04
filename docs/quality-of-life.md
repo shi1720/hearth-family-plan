@@ -6,7 +6,7 @@ November 4, 2026.
 
 Desktop has a collapsible 82px icon rail. Its preference is remembered on this browser without storing household data. Icons retain accessible names and hover labels. Mobile and portrait tablet layouts use a five-action bottom bar: Home, People, Documents, When needed and More. More opens a sheet containing every page, account controls and preferences.
 
-The sheet traps keyboard focus, restores focus to its trigger, and makes the background inactive. Forms also make background navigation inactive. Escape, outside-click and close actions protect unsaved edits. Saving or uploading prevents the form from closing partway through the operation. Offline status explains why writes are unavailable.
+The sheet traps keyboard focus, restores focus to its trigger, and makes the background inactive. Forms also make background navigation inactive. Escape, outside-click and close actions protect unsaved edits. Saving or uploading prevents the form from closing partway through the operation. Accepted transcriptions and generated invitation links do not produce a stale unsaved-draft warning; consent-only review dialogs can be cancelled normally. Offline status explains why writes are unavailable.
 
 ## Documents and sources
 

@@ -645,7 +645,7 @@ export default function Hearth() {
   const activeDocument = documents.find((d) => d.id === form.id);
   const canReviewAuthority = previewRole === "owner" && household.stage === "death-reported" && (role === "professional" || (state.fixture && role === "owner"));
   const modalEditable = !!data && previewRole === "owner" && (modal === "authority" ? canReviewAuthority : ["claim","ledger"].includes(modal) ? canReview : modal === "transaction" ? canRecordMoney : modal === "task" ? ["owner","professional"].includes(role) || (role === "representative" && form.category === "administration" && household.stage === "authority-reviewed") : owner) && !(isDemo && ["new","invite"].includes(modal));
-  hasUnsavedChanges.current = !!modal && modalEditable && JSON.stringify(form) !== originalForm.current;
+  hasUnsavedChanges.current = !!modal && modalEditable && !["extract", "review", "analyze-doc"].includes(modal) && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && !(modal === "invite" && invitationUrl) && JSON.stringify(form) !== originalForm.current;
   closeFormRef.current = () => {
     if (busy || uploading) return;
     if (discardPrompt) { setDiscardPrompt(false); return; }
@@ -3983,7 +3983,7 @@ export default function Hearth() {
                 <>
                   <p className="modal-intro">
                     <strong>{activeDocument?.title}</strong> ·{" "}
-                    {activeDocument?.extraction?.model || "Model transcription"}
+                    {activeDocument?.extraction?.model ? modelName(activeDocument.extraction.model) : "Model transcription"}
                     . Check every part against the original, particularly names,
                     dates, shares, negations, and execution references. Model
                     output is not accepted automatically.
@@ -4006,7 +4006,7 @@ export default function Hearth() {
                     </span>
                     <textarea
                       readOnly={
-                        activeDocument?.extraction?.status === "accepted"
+                        !modalEditable || activeDocument?.extraction?.status === "accepted"
                       }
                       rows={12}
                       value={
