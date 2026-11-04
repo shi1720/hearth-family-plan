@@ -129,6 +129,10 @@ Desktop navigation can collapse into an 82px icon rail and remembers the choice 
 
 See [the everyday usability pass](docs/quality-of-life.md) for the changes and bounded workflow checks. The branded favicon and home-screen icons match the rose-and-plum design.
 
+## Everyday navigation and next steps
+
+Quick find opens with the header search button or Cmd/Ctrl+K. It searches named records already available in the current permission view, keeps the query in browser memory, and opens a record directly for review. Page-only URL fragments preserve the selected screen across refresh and browser Back/Forward, without exposing record IDs. Task lists include All/Open/Completed filters, completion progress, and recorded-date badges. Save confirmations stay visible above the mobile bottom bar. See [the second usability pass](docs/everyday-navigation.md).
+
 ## Review materials
 
 See [the project story](docs/submission-story.txt), [testing instructions](docs/review-testing.txt), [video metadata](docs/submission-video-metadata.txt), [narration](docs/submission-narration.txt) and [timed captions](docs/submission-captions.srt). The [public 2:53 product walkthrough](https://youtu.be/WRoXRO8BRIs) opens with the family problem and follows preparation, careful handover and after-death administration, then explains Meta model roles, evaluation and the proposed buyer. It uses original fictional records and actual app footage edited for pacing. The generated voice is a standard Google Cloud Chirp voice, without cloning a real person.

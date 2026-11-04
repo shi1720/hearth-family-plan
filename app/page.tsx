@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import charityProfiles from "@/lib/charity-profiles.json";
+import {findInPlan, pageFragments, viewFromFragment, taskTiming, type FindResult, type PlanView} from "@/lib/everyday";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -36,14 +37,7 @@ import {
 type Item = Record<string, any>;
 const ReadOnlyContext = createContext(false);
 async function responseData(response: Response): Promise<any> { try { return await response.json(); } catch { throw new Error(response.status >= 500 ? "The service is temporarily unavailable. Your saved records have not been replaced. Please try again." : "The service returned an unexpected response. Please reload your plan before continuing."); } }
-type View =
-  | "Home"
-  | "People"
-  | "Documents"
-  | "Accounts & policies"
-  | "Giving"
-  | "When needed"
-  | "Practice";
+type View = PlanView;
 type Workspace = {
   state: Item;
   revision: number;
@@ -361,6 +355,7 @@ function Field({
         <input
           id={id}
           type={kind}
+          onInput={kind === "datetime-local" || kind === "date" || kind === "time" ? (event) => setForm({ ...form, [name]: event.currentTarget.value }) : undefined}
           required={required}
           value={form[name] ?? ""}
           readOnly={readOnly}
@@ -401,7 +396,36 @@ export default function Hearth() {
     }),
     [accessBusy, setAccessBusy] = useState(""),
     [accessConfirm, setAccessConfirm] = useState<Item | null>(null);
+  const [findQuery, setFindQuery] = useState("");
+  const [findIndex, setFindIndex] = useState(0);
+  const [findShortcut, setFindShortcut] = useState("Ctrl K");
+  const openFinderRef = useRef<() => void>(() => {});
   const [compactNav, setCompactNav] = useState(false);
+  useEffect(() => {
+    const sync = () => {
+      const next = viewFromFragment(location.hash);
+      if (next) setView(next);
+      else if (!location.hash) setView("Home");
+      setMobile(false);
+      setSearch("");
+    };
+    sync();
+    setFindShortcut(/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K");
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k" && !event.isComposing) {
+        event.preventDefault();
+        openFinderRef.current();
+      }
+    };
+    window.addEventListener("popstate", sync);
+    window.addEventListener("hashchange", sync);
+    document.addEventListener("keydown", shortcut);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener("hashchange", sync);
+      document.removeEventListener("keydown", shortcut);
+    };
+  }, []);
   const [collapsed, setCollapsed] = useState(false);
   const [discardPrompt, setDiscardPrompt] = useState(false);
   const [draggingFile, setDraggingFile] = useState(false);
@@ -436,7 +460,7 @@ export default function Hearth() {
     [previewAccess, setPreviewAccess] = useState("documents"),
     [ownerAccess, setOwnerAccess] = useState(false);
   useEffect(()=>{const media=window.matchMedia("(max-width: 1000px)");const update=()=>{setCompactNav(media.matches);if(!media.matches)setMobile(false);};update();media.addEventListener("change",update);return()=>media.removeEventListener("change",update);},[]);
-  useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(""), 8000); return () => window.clearTimeout(timer); }, [notice]);
+  useEffect(() => { if (!notice || modal || mobile) return; const timer = window.setTimeout(() => setNotice(""), 8000); return () => window.clearTimeout(timer); }, [notice, modal, mobile]);
   const fileRef = useRef<HTMLInputElement>(null);
   const loadSequence = useRef(0);
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -568,7 +592,7 @@ export default function Hearth() {
       const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "This change could not be saved.");
       setData(j);
-      if (name === "new-plan") { setView("Home"); setSearch(""); }
+      if (name === "new-plan") navigate("Home");
       if (j.invitation) setInvitationUrl(j.invitation.url);
       setNotice(j.message || "Saved to your private family plan.");
       return true;
@@ -581,6 +605,7 @@ export default function Hearth() {
   }
   function open(name: string, value: Item = {}) {
     if (!data) return;
+    if (name === "find") { setFindQuery(""); setFindIndex(0); }
     setMobile(false);
     if (data.user.isDemo && ["new", "invite"].includes(name)) { setError("Sign in with Google or a verified email to create your own plan or share it. Your private sample remains available to explore."); return; }
     const d =
@@ -613,7 +638,11 @@ export default function Hearth() {
       practice: "Practice",
     };
     next = mapped[next] || next;
-    if (nav.some(([n]) => n === next)) setView(next as View);
+    if (nav.some(([n]) => n === next)) {
+      setView(next as View);
+      const fragment = "#" + pageFragments[next as View];
+      if (location.hash !== fragment) history.pushState(null, "", location.pathname + location.search + fragment);
+    }
     setMobile(false);
     setSearch("");
     window.scrollTo({top:0,behavior:"instant"});
@@ -647,9 +676,21 @@ export default function Hearth() {
     ledgerDerived: Item = derived.ledger || {},
     transactions: Item[] = ledger.entries || [];
   const activeDocument = documents.find((d) => d.id === form.id);
+  const findResults = modal === "find" ? findInPlan(state, findQuery) : [];
+  openFinderRef.current = () => { if (data && !modal && !mobile && !busy) open("find"); };
+  function chooseFindResult(result: FindResult) {
+    setModal("");
+    navigate(result.view);
+    if (result.kind !== "page" && result.record) open(result.kind, result.record);
+    else window.setTimeout(() => document.getElementById("main")?.focus({preventScroll:true}), 0);
+  }
+  useEffect(() => {
+    if (modal !== "find") return;
+    document.getElementById("find-option-" + findIndex)?.scrollIntoView({block:"nearest"});
+  }, [modal, findIndex, findQuery]);
   const canReviewAuthority = previewRole === "owner" && household.stage === "death-reported" && (role === "professional" || (state.fixture && role === "owner"));
   const modalEditable = !!data && previewRole === "owner" && (modal === "authority" ? canReviewAuthority : ["claim","ledger"].includes(modal) ? canReview : modal === "transaction" ? canRecordMoney : modal === "task" ? ["owner","professional"].includes(role) || (role === "representative" && form.category === "administration" && household.stage === "authority-reviewed") : owner) && !(isDemo && ["new","invite"].includes(modal));
-  hasUnsavedChanges.current = !!modal && modalEditable && !["extract", "review", "analyze-doc"].includes(modal) && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && !(modal === "invite" && invitationUrl) && JSON.stringify(form) !== originalForm.current;
+  hasUnsavedChanges.current = !!modal && modalEditable && !["find", "extract", "review", "analyze-doc"].includes(modal) && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && !(modal === "invite" && invitationUrl) && JSON.stringify(form) !== originalForm.current;
   closeFormRef.current = () => {
     if (busy || uploading) return;
     if (discardPrompt) { setDiscardPrompt(false); return; }
@@ -711,6 +752,7 @@ export default function Hearth() {
     );
   async function saveForm(e: React.FormEvent) {
     e.preventDefault();
+    if (modal === "find") { const chosen = findResults[Math.min(findIndex, findResults.length-1)]; if (chosen) chooseFindResult(chosen); return; }
     if (offline) { setError("You are offline. Reconnect to save these changes. Your draft is still here."); return; }
     if (!modalEditable || busy || uploading) {
       setError(previewRole !== "owner" ? "Return to your own view to make changes." : "This record is read only for your current role.");
@@ -771,7 +813,7 @@ export default function Hearth() {
         id: form.id,
         consent: form.consent,
       });
-      if (ok) setView("Documents");
+      if (ok) navigate("Documents");
     } else if (modal === "analysis") ok = await action("analyze", form);
     else if (modal === "review")
       ok = await action("review-plan", { consent: form.consent });
@@ -865,6 +907,7 @@ export default function Hearth() {
     }
   }
   const modalTitles: Record<string, string> = {
+    find: "Find your way.",
     person: "Someone you can count on.",
     document: "Keep the important things findable.",
     account: "A clearer picture, one account at a time.",
@@ -1008,6 +1051,7 @@ export default function Hearth() {
             <strong>{view}</strong>
           </div>
           <div className="top-actions">
+            <button className="quick-find-trigger" disabled={!data || !!busy} aria-label="Find pages and records" title={"Find pages and records (" + findShortcut + ")"} onClick={() => open("find")}><Search size={17}/><span>Quick find</span><kbd>{findShortcut}</kbd></button>
             {state.fixture && (
               <span className="sample-label">Illustrative family</span>
             )}
@@ -1061,7 +1105,7 @@ export default function Hearth() {
                 onChange={(e) => {
                   const next = e.target.value;
                   setPreviewRole(next);
-                  setView("Home");
+                  navigate("Home");
                   load(next, previewAccess);
                 }}
               >
@@ -1123,8 +1167,8 @@ export default function Hearth() {
               </button>
             </div>
           )}
-          {notice && (
-            <div className="alert success" role="status">
+          {notice && !modal && !mobile && (
+            <div className="alert success save-toast" role="status">
               <CheckCheck size={17} />
               <span>{notice}</span>
               <button
@@ -1693,7 +1737,7 @@ export default function Hearth() {
                               onClick={() => {
                                 setPreviewRole("helper");
                                 setPreviewAccess(p.access);
-                                setView("Home");
+                                navigate("Home");
                                 load("helper", p.access);
                               }}
                             >
@@ -2603,6 +2647,7 @@ export default function Hearth() {
                     }
                   >
                     <TaskList
+                      key={view}
                       tasks={tasks.filter(
                         (t) => t.category === "administration",
                       )}
@@ -3024,6 +3069,7 @@ export default function Hearth() {
                     }
                   >
                     <TaskList
+                      key={view}
                       tasks={tasks.filter((t) =>
                         view === "People"
                           ? t.category === "planning"
@@ -3191,7 +3237,8 @@ export default function Hearth() {
                     <p>
                       {t.owner || "No owner recorded"} ·{" "}
                       {statusLabels[t.status] || t.status}
-                      {t.dueAt ? ` · Due ${date(t.dueAt)}` : ""}
+                      {t.dueAt && Number.isFinite(new Date(t.dueAt).getTime()) ? <time dateTime={t.dueAt} title={new Date(t.dueAt).toLocaleString()}> · Due {date(t.dueAt)}</time> : ""}
+
                     </p>
                     {t.detail && <p>Guidance: {t.detail}</p>}{t.sourceQuote && <blockquote>{t.sourceQuote}</blockquote>}
                     <p>{t.evidence || "Completion evidence not recorded"}</p>
@@ -3248,11 +3295,11 @@ export default function Hearth() {
       {modal && (
         <div className="modal-backdrop" onMouseDown={() => closeFormRef.current()}>
           <section
-            className={`modal ${["analysis", "review", "read-doc", "analyze-doc"].includes(modal) ? "wide" : ""}`}
+            className={`modal ${modal === "find" ? "finder-modal" : ""} ${["find", "analysis", "review", "read-doc", "analyze-doc"].includes(modal) ? "wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-title"
-            aria-describedby={!modalEditable ? "read-only-modal-description" : undefined}
+            aria-describedby={!modalEditable && modal !== "find" ? "read-only-modal-description" : undefined}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <button
@@ -3265,13 +3312,31 @@ export default function Hearth() {
             </button>
             <p className="eyebrow">YOUR PLAN. YOUR PACE.</p>
             <h2 id="modal-title">{modalTitles[modal]}</h2>
-            {!modalEditable && <div id="read-only-modal-description" className="read-only-form-note"><LockKeyhole size={15}/><span>{previewRole !== "owner" ? "This is a read-only permission preview. Return to your owner view to make changes." : "You can review this record. Changes require the appropriate plan role."}</span></div>}
+            {!modalEditable && modal !== "find" && <div id="read-only-modal-description" className="read-only-form-note"><LockKeyhole size={15}/><span>{previewRole !== "owner" ? "This is a read-only permission preview. Return to your owner view to make changes." : "You can review this record. Changes require the appropriate plan role."}</span></div>}
             {discardPrompt && <div className="discard-confirmation" role="alert">
               <strong>Keep your changes?</strong>
               <p>This form has unsaved changes. Keep editing to save them, or discard this draft.</p>
               <div className="button-row"><Button secondary onClick={() => {setDiscardPrompt(false);setModal("");}}>Discard changes</Button><Button onClick={() => setDiscardPrompt(false)}>Keep editing</Button></div>
             </div>}
             <form onSubmit={saveForm}><ReadOnlyContext.Provider value={!modalEditable}>
+              {modal === "find" && <div className="quick-find">
+                <p className="finder-intro">Find a page, a person or an important record. Your search stays in this browser.</p>
+                <div className="finder-input"><Search size={20}/><input id="quick-find-input" role="combobox" aria-label="Search your plan" aria-autocomplete="list" aria-expanded="true" aria-controls="quick-find-results" aria-activedescendant={findResults.length ? "find-option-" + Math.min(findIndex,findResults.length-1) : undefined} autoComplete="off" spellCheck={false} placeholder="Search your plan…" value={findQuery} onChange={event => {setFindQuery(event.target.value);setFindIndex(0);}} onKeyDown={event => {
+                  if (["ArrowDown","ArrowUp"].includes(event.key) && findResults.length) {
+                    event.preventDefault();
+                    setFindIndex(index => (index + (event.key === "ArrowDown" ? 1 : -1) + findResults.length) % findResults.length);
+                  }
+                }}/>{findQuery && <button type="button" className="finder-clear" aria-label="Clear quick find" onClick={() => {setFindQuery("");setFindIndex(0);document.getElementById("quick-find-input")?.focus();}}><X size={17}/></button>}</div>
+                <p className="finder-section">{findQuery.trim() ? "MATCHING PAGES AND RECORDS" : "GO SOMEWHERE"}</p>
+                <div id="quick-find-results" className="finder-results" role="listbox" aria-label="Search results">
+                  {findResults.map((result,index) => {
+                    const Icon = result.kind === "person" ? Users : result.kind === "document" ? FileText : result.kind === "account" || result.kind === "transaction" ? WalletCards : result.kind === "gift" ? Leaf : result.kind === "task" ? CheckCheck : result.kind === "claim" ? FolderHeart : nav.find(([name]) => name === result.view)?.[1] || Home;
+                    return <button id={"find-option-" + index} key={result.key} type="button" role="option" aria-selected={index === findIndex} tabIndex={-1} className="finder-result" onClick={() => chooseFindResult(result)}><span className="finder-result-icon"><Icon size={19}/></span><span><strong>{result.label}</strong><small>{result.detail}</small></span><ArrowRight size={15}/></button>;
+                  })}
+                </div>
+                {!findResults.length && <div className="finder-empty"><Search size={25}/><strong>No matches yet.</strong><p>Try a shorter name or another word. Only records available in your current view are searched.</p></div>}
+                <p className="finder-help" role="status">{findQuery.trim() ? findResults.length ? "Showing " + findResults.length + (findResults.length === 1 ? " match." : " matches.") : "No results for this search." : "Only records you have permission to view are available."}<span>↑ ↓ to move · Enter to open</span></p>
+              </div>}
               {modal === "person" && (
                 <>
                   <Field
@@ -4422,9 +4487,9 @@ export default function Hearth() {
                     </Button>
                   )}
                 <Button secondary onClick={() => closeFormRef.current()} disabled={!!busy || uploading}>
-                  {!modalEditable || (modal === "read-doc" && activeDocument?.extraction?.status === "accepted") ? "Close" : "Not now"}
+                  {!modalEditable || modal === "find" || (modal === "read-doc" && activeDocument?.extraction?.status === "accepted") ? "Close" : "Not now"}
                 </Button>
-                {modalEditable && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && <Button
+                {modalEditable && modal !== "find" && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && <Button
                   type="submit"
                   disabled={
                     previewRole !== "owner" ||
@@ -4548,9 +4613,19 @@ function TaskList({
   tasks: Item[];
   onEdit: (t: Item) => void;
 }) {
+  const [filter, setFilter] = useState<"all"|"open"|"complete">("all");
+  const [now,setNow] = useState<Date | null>(null);
+  useEffect(() => {setNow(new Date());const timer=window.setInterval(()=>setNow(new Date()),60000);return()=>window.clearInterval(timer);},[]);
+  const completed = tasks.filter(task => task.status === "complete").length;
+  const shown = tasks.filter(task => filter === "all" || (filter === "complete" ? task.status === "complete" : task.status !== "complete"));
   return (
     <div className="task-list">
-      {tasks.map((t) => (
+      {!!tasks.length && <div className="task-overview">
+        <div className="task-progress-label"><span>{completed} of {tasks.length} completed</span><span>{tasks.length-completed} still open</span></div>
+        <progress max={tasks.length} value={completed} aria-label="Completed next steps"/>
+        <div className="task-filters" role="group" aria-label="Filter next steps">{([["all","All",tasks.length],["open","Open",tasks.length-completed],["complete","Completed",completed]] as const).map(([value,label,count])=><button key={value} type="button" aria-pressed={filter===value} onClick={()=>setFilter(value)}>{label}<span>{count}</span></button>)}</div>
+      </div>}
+      {shown.map((t) => (
         <article className="task-record" key={t.id}>
           <button
             className="task-record-main"
@@ -4565,7 +4640,8 @@ function TaskList({
               <strong>{t.title}</strong>
               <small>
                 {t.owner || "No owner recorded"}
-                {t.dueAt ? ` · Due ${date(t.dueAt)}` : ""}
+                {t.dueAt && Number.isFinite(new Date(t.dueAt).getTime()) ? <time dateTime={t.dueAt} title={new Date(t.dueAt).toLocaleString()}> · Due {date(t.dueAt)}</time> : ""}
+                {now && ["overdue","today"].includes(taskTiming(t.dueAt,t.status,now) || "") && <span className={`task-due-label ${taskTiming(t.dueAt,t.status,now)}`}><Clock3 size={11}/>{taskTiming(t.dueAt,t.status,now) === "overdue" ? "Past due" : "Due today"}</span>}
                 {t.evidence ? ` · ${t.evidence}` : ""}
               </small>
             </span>
@@ -4590,6 +4666,7 @@ function TaskList({
           )}
         </article>
       ))}
+      {!!tasks.length && !shown.length && <div className="task-filter-empty"><CheckCheck size={23}/><p>{filter === "complete" ? "No completed steps in this area yet." : "No open steps in this area."}</p><button type="button" className="text-button" onClick={()=>setFilter("all")}>Show all steps <ArrowRight size={12}/></button></div>}
       {!tasks.length && (
         <p className="empty-list">
           No steps recorded in this area. Add only what is useful.
