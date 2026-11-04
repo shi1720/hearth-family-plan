@@ -20,6 +20,10 @@ import {
   LoaderCircle,
   LockKeyhole,
   Menu,
+  MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Upload,
   Plus,
   Search,
   Settings2,
@@ -398,6 +402,36 @@ export default function Hearth() {
     [accessBusy, setAccessBusy] = useState(""),
     [accessConfirm, setAccessConfirm] = useState<Item | null>(null);
   const [compactNav, setCompactNav] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [discardPrompt, setDiscardPrompt] = useState(false);
+  const [draggingFile, setDraggingFile] = useState(false);
+  const [offline, setOffline] = useState(false);
+  const originalForm = useRef("");
+  const closeFormRef = useRef<() => void>(() => {});
+  const hasUnsavedChanges = useRef(false);
+  useEffect(() => {
+    try { setCollapsed(localStorage.getItem("hearth.sidebar.collapsed") === "true"); } catch {}
+    const update = () => setOffline(!navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    const beforeLeave = (event: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges.current) { event.preventDefault(); event.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", beforeLeave);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+      window.removeEventListener("beforeunload", beforeLeave);
+    };
+  }, []);
+  function toggleSidebar() {
+    setCollapsed(value => {
+      const next = !value;
+      try { localStorage.setItem("hearth.sidebar.collapsed", String(next)); } catch {}
+      return next;
+    });
+  }
   const [previewRole, setPreviewRole] = useState("owner"),
     [previewAccess, setPreviewAccess] = useState("documents"),
     [ownerAccess, setOwnerAccess] = useState(false);
@@ -406,6 +440,7 @@ export default function Hearth() {
   const fileRef = useRef<HTMLInputElement>(null);
   const loadSequence = useRef(0);
   const menuRef = useRef<HTMLButtonElement>(null);
+  const navigationTrigger = useRef<HTMLButtonElement | null>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!modal) return;
@@ -417,7 +452,7 @@ export default function Hearth() {
     }, 0);
     function key(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        setModal("");
+        closeFormRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -502,6 +537,7 @@ export default function Hearth() {
   }, []);
   async function action(name: string, payload: Item = {}): Promise<boolean> {
     if (!data || busy) return false;
+    if (offline) { setError("You are offline. Reconnect before saving a change."); return false; }
     if (previewRole !== "owner") {
       setError(
         "This is a read-only permission preview. Return to your own view before making changes.",
@@ -545,13 +581,17 @@ export default function Hearth() {
     if (data.user.isDemo && ["new", "invite"].includes(name)) { setError("Sign in with Google or a verified email to create your own plan or share it. Your private sample remains available to explore."); return; }
     const d =
       name === "read-doc" ? documents.find((d) => d.id === value.id) : null;
-    setForm({
+    const initialForm = {
       ...defaultForms[name],
       ...(d?.extraction ? { correctedText: d.extraction.text } : {}),
       ...value,
       ...(name === "task" && value.dueAt ? {dueAt:localInput(value.dueAt)} : {}),
       ...(name === "claim" && value.deadline ? {deadline:localInput(value.deadline)} : {}),
-    });
+    };
+    originalForm.current = JSON.stringify(initialForm);
+    setDiscardPrompt(false);
+    setDraggingFile(false);
+    setForm(initialForm);
     setModal(name);
     setError("");
     setInvitationUrl("");
@@ -605,10 +645,21 @@ export default function Hearth() {
   const activeDocument = documents.find((d) => d.id === form.id);
   const canReviewAuthority = previewRole === "owner" && household.stage === "death-reported" && (role === "professional" || (state.fixture && role === "owner"));
   const modalEditable = !!data && previewRole === "owner" && (modal === "authority" ? canReviewAuthority : ["claim","ledger"].includes(modal) ? canReview : modal === "transaction" ? canRecordMoney : modal === "task" ? ["owner","professional"].includes(role) || (role === "representative" && form.category === "administration" && household.stage === "authority-reviewed") : owner) && !(isDemo && ["new","invite"].includes(modal));
+  hasUnsavedChanges.current = !!modal && modalEditable && JSON.stringify(form) !== originalForm.current;
+  closeFormRef.current = () => {
+    if (busy || uploading) return;
+    if (discardPrompt) { setDiscardPrompt(false); return; }
+    if (hasUnsavedChanges.current) {
+      setDiscardPrompt(true);
+      window.setTimeout(() => document.querySelector<HTMLButtonElement>(".discard-confirmation button:last-child")?.focus(), 0);
+      return;
+    }
+    setModal("");
+  };
   const signInPath = `/sign-in?return_to=${encodeURIComponent(inviteToken ? `/?invite=${encodeURIComponent(inviteToken)}` : "/")}`;
   async function signOut(){setBusy("sign-out");setError("");try{const r=await fetch("/api/auth/sign-out",{method:"POST"});if(!r.ok)throw Error("We could not sign you out. Please try again.");window.location.assign("/sign-in");}catch(e){setError(e instanceof Error?e.message:"Sign-out is unavailable. Please retry.");}finally{setBusy("");}}
   useEffect(()=>{if(!mobile&&!modal)return;const previous=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=previous;};},[mobile,modal]);
-  useEffect(()=>{if(!mobile)return;const node=sidebarRef.current;const first=node?.querySelector<HTMLElement>("button:not([disabled]),a[href]");const timer=window.setTimeout(()=>first?.focus(),0);function key(e:KeyboardEvent){if(e.key==="Escape"){setMobile(false);menuRef.current?.focus();return;}if(e.key!=="Tab")return;const nodes=Array.from(node?.querySelectorAll<HTMLElement>("button:not([disabled]),a[href]")||[]);const start=nodes[0],end=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===start){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();start?.focus();}}document.addEventListener("keydown",key);return()=>{clearTimeout(timer);document.removeEventListener("keydown",key);};},[mobile]);
+  useEffect(()=>{if(!mobile)return;const node=sidebarRef.current;const first=node?.querySelector<HTMLElement>("button:not([disabled]),a[href]");const timer=window.setTimeout(()=>first?.focus(),0);function key(e:KeyboardEvent){if(e.key==="Escape"){setMobile(false);(navigationTrigger.current || menuRef.current)?.focus();return;}if(e.key!=="Tab")return;const nodes=Array.from(node?.querySelectorAll<HTMLElement>("button:not([disabled]),a[href]")||[]);const start=nodes[0],end=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===start){e.preventDefault();end?.focus();}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();start?.focus();}}document.addEventListener("keydown",key);return()=>{clearTimeout(timer);document.removeEventListener("keydown",key);};},[mobile]);
   async function loadAccess() {
     if (!owner || isDemo || previewRole !== "owner") return;
     setAccessBusy("load");
@@ -656,6 +707,7 @@ export default function Hearth() {
     );
   async function saveForm(e: React.FormEvent) {
     e.preventDefault();
+    if (offline) { setError("You are offline. Reconnect to save these changes. Your draft is still here."); return; }
     if (!modalEditable || busy || uploading) {
       setError(previewRole !== "owner" ? "Return to your own view to make changes." : "This record is read only for your current role.");
       return;
@@ -758,10 +810,17 @@ export default function Hearth() {
       setError("File uploads are disabled in a permission preview.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Please choose a file smaller than 5 MB.");
+    if (uploading) return;
+    setError("");
+    if (!file.size || file.size > 5 * 1024 * 1024) {
+      setError("Choose a non-empty file up to 5 MB.");
       return;
     }
+    if (!["application/pdf", "image/png", "image/jpeg", "text/plain"].includes(file.type)) {
+      setError("Choose a PDF, PNG, JPEG or plain text file. Other formats are not supported yet.");
+      return;
+    }
+    if (offline) { setError("You are offline. Reconnect before attaching a file."); return; }
     setUploading(true);
     try {
       const body = new FormData();
@@ -769,7 +828,7 @@ export default function Hearth() {
       const r = await fetch("/api/files", { method: "POST", body });
       const j: any = await responseData(r);
       if (!r.ok) throw Error(j.error || "Upload failed");
-      setForm((v) => ({ ...v, fileId: j.fileId, fileName: j.name }));
+      setForm((v) => ({ ...v, fileId: j.fileId, fileName: j.name.slice(0,180), ...(v.title ? {} : {title: j.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ")}) }));
       setNotice(
         "File uploaded. Save the document record to attach it to your plan.",
       );
@@ -824,7 +883,7 @@ export default function Hearth() {
     provider: "Connect your private AI assistant.",
   };
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${collapsed ? "sidebar-collapsed" : ""}`}>
       <a className="skip-link" href="#main">
         Skip to your plan
       </a>
@@ -832,11 +891,11 @@ export default function Hearth() {
         <button
           className="scrim"
           aria-label="Close navigation"
-          onClick={() => {setMobile(false);menuRef.current?.focus();}}
+          onClick={() => {setMobile(false);(navigationTrigger.current || menuRef.current)?.focus();}}
         />
       )}
-      <aside id="primary-sidebar" ref={sidebarRef} className={`sidebar ${mobile ? "open" : ""}`} aria-label="Family plan navigation" inert={compactNav && !mobile ? true : undefined} aria-hidden={compactNav && !mobile ? true : undefined}>
-        <button className="icon-button mobile-sidebar-close" aria-label="Close navigation" onClick={()=>{setMobile(false);menuRef.current?.focus();}}><X size={20}/></button>
+      <aside id="primary-sidebar" ref={sidebarRef} className={`sidebar ${mobile ? "open" : ""}`} aria-label="Family plan navigation" inert={!!modal || (compactNav && !mobile) ? true : undefined} aria-hidden={!!modal || (compactNav && !mobile) ? true : undefined}>
+        <button className="icon-button mobile-sidebar-close" aria-label="Close navigation" onClick={()=>{setMobile(false);(navigationTrigger.current || menuRef.current)?.focus();}}><X size={20}/></button>
         <div className="sidebar-scroll">
         <button
           className="brand"
@@ -846,7 +905,7 @@ export default function Hearth() {
           <span className="brand-icon">
             <Heart size={21} strokeWidth={1.7} />
           </span>
-          hearth<span className="brand-period">.</span>
+          <span className="brand-wordmark">hearth<span className="brand-period">.</span></span>
         </button>
         <p className="brand-caption">FOR THE PEOPLE WHO MATTER</p>
         <div className="family-switch">
@@ -862,6 +921,8 @@ export default function Hearth() {
           {nav.map(([name, Icon]) => (
             <button
               key={name}
+              aria-label={name}
+              title={collapsed && !compactNav ? name : undefined}
               className={`nav-item ${view === name ? "active" : ""}`}
               aria-current={view === name ? "page" : undefined}
               onClick={() => navigate(name)}
@@ -893,6 +954,8 @@ export default function Hearth() {
         <div className="sidebar-bottom">
           <button
             className="privacy-link"
+            aria-label="Privacy and preferences"
+            title={collapsed && !compactNav ? "Privacy and preferences" : undefined}
             disabled={!data}
             onClick={() => open("preferences", state.preferences)}
           >
@@ -900,6 +963,8 @@ export default function Hearth() {
           </button>
           <button
             className="user-profile"
+            aria-label="Account and preferences"
+            title={collapsed && !compactNav ? "Account and preferences" : undefined}
             disabled={!data}
             onClick={() => open("preferences", state.preferences)}
           >
@@ -918,18 +983,21 @@ export default function Hearth() {
           </button>
         </div>
       </aside>
-      <div className="main-shell">
+      <div className="main-shell" inert={mobile || !!modal ? true : undefined}>
         <header className="topbar">
           <div className="breadcrumb">
             <button
               ref={menuRef}
               className="icon-button mobile-menu"
-              aria-label="Open navigation"
+              aria-label={compactNav ? "More navigation and settings" : "Open navigation"}
               aria-expanded={mobile}
               aria-controls="primary-sidebar"
-              onClick={() => setMobile(true)}
+              onClick={(event) => {navigationTrigger.current=event.currentTarget;setMobile(true);}}
             >
               <Menu size={20} />
+            </button>
+            <button className="icon-button desktop-sidebar-toggle" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-expanded={!collapsed} aria-controls="primary-sidebar" onClick={toggleSidebar} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+              {collapsed ? <PanelLeftOpen size={19}/> : <PanelLeftClose size={19}/>}
             </button>
             <span>{household.name || "Your family plan"}</span>
             <ChevronRight size={12} />
@@ -1028,6 +1096,7 @@ export default function Hearth() {
             </details>
           )}
 
+          {offline && <div className="offline-notice" role="status"><CircleAlert size={17}/><span>You are offline. Your loaded plan is still here. Reconnect to save changes or review with AI.</span></div>}
           {error && (
             <div className="alert error" role="alert">
               <CircleAlert size={18} />
@@ -1072,9 +1141,12 @@ export default function Hearth() {
                 Accepting gives only the role and records permitted by the plan
                 owner.
               </p>
-              <pre className="invitation-info">
-                {JSON.stringify(invite, null, 2)}
-              </pre>
+              <dl className="invitation-summary">
+                <div><dt>Invited email</dt><dd>{invite.email}</dd></div>
+                <div><dt>Your role</dt><dd>{invite.role === "representative" ? "Estate representative" : invite.role === "professional" ? "Professional" : "Trusted helper"}</dd></div>
+                <div><dt>Shared information</dt><dd>{invite.access === "administration" ? "Administration records" : invite.access === "emergency" ? "Emergency information" : "Permitted documents"}</dd></div>
+                <div><dt>Accept by</dt><dd>{date(invite.expiresAt)}</dd></div>
+              </dl>
               <Button onClick={acceptInvitation} disabled={!!busy}>
                 {busy ? (
                   <LoaderCircle className="spin" size={15} />
@@ -1872,7 +1944,7 @@ export default function Hearth() {
                             <tr key={d.id}>
                               <td>
                                 <strong>{d.title}</strong>
-                                <small>{d.kind}</small>
+                                <small>{({will:"Will",care:"Care instructions",letter:"Personal letter",other:"Other document"} as Record<string,string>)[d.kind] || d.kind}{d.fileId ? " · Attachment saved" : ""}</small>
                               </td>
                               <td data-label="Recorded status">
                                 <Badge value={d.status} />
@@ -1896,7 +1968,7 @@ export default function Hearth() {
                                       className="text-button"
                                       href={`/api/files?id=${encodeURIComponent(d.fileId)}`}
                                     >
-                                      <ArrowDownToLine size={13} /> File
+                                      <ArrowDownToLine size={13} /> Download
                                     </a>
                                   )}
                                   {owner && d.fileId && (
@@ -1956,7 +2028,7 @@ export default function Hearth() {
                                 <span>
                                   <strong>{d.title}</strong>
                                   <small>
-                                    {d.extraction.model} ·{" "}
+                                    {modelName(d.extraction.model)} ·{" "}
                                     {d.extraction.status === "accepted"
                                       ? "Text checked against original"
                                       : "Human text check needed"}
@@ -2055,16 +2127,16 @@ export default function Hearth() {
                   />
                   {owner && !!state.intakes?.length && (
                     <Panel
-                      title="Source text and provenance"
+                      title="Saved sources for your review"
                       eyebrow="THE INPUT BEHIND THE SUGGESTION"
                     >
                       <div className="intake-records">
                         {state.intakes.map((i: Item) => (
                           <details key={i.id}>
                             <summary>
-                              {i.model} · {date(i.at)} <span>{i.id}</span>
+                              <BookOpen size={15}/> {modelName(i.model)} · {date(i.at)}
                             </summary>
-                            <code>SHA-256: {i.sha256}</code>
+                            <p className="source-saved-note"><ShieldCheck size={14}/> Saved with the suggestion so you can check it later.</p>
                             <pre>{i.text}</pre>
                           </details>
                         ))}
@@ -3165,8 +3237,12 @@ export default function Hearth() {
           )}
         </main>
       </div>
+      {data && <nav className="mobile-bottom-nav" aria-label="Quick navigation" inert={mobile || !!modal ? true : undefined}>
+        {([["Home", Home], ["People", Users], ["Documents", FileText], ["When needed", FolderHeart]] as const).map(([name, Icon]) => <button key={name} aria-current={view === name ? "page" : undefined} onClick={() => navigate(name)}><Icon size={21}/><span>{name}</span></button>)}
+        <button aria-label="More pages and settings" aria-expanded={mobile} aria-controls="primary-sidebar" className={["Accounts & policies","Giving","Practice"].includes(view) ? "more-active" : ""} onClick={(event) => {navigationTrigger.current=event.currentTarget;setMobile(true);}}><MoreHorizontal size={23}/><span>More</span></button>
+      </nav>}
       {modal && (
-        <div className="modal-backdrop" onMouseDown={() => setModal("")}>
+        <div className="modal-backdrop" onMouseDown={() => closeFormRef.current()}>
           <section
             className={`modal ${["analysis", "review", "read-doc", "analyze-doc"].includes(modal) ? "wide" : ""}`}
             role="dialog"
@@ -3177,7 +3253,8 @@ export default function Hearth() {
           >
             <button
               className="icon-button modal-close"
-              onClick={() => setModal("")}
+              onClick={() => closeFormRef.current()}
+              disabled={!!busy || uploading}
               aria-label="Close form"
             >
               <X size={20} />
@@ -3185,6 +3262,11 @@ export default function Hearth() {
             <p className="eyebrow">YOUR PLAN. YOUR PACE.</p>
             <h2 id="modal-title">{modalTitles[modal]}</h2>
             {!modalEditable && <div id="read-only-modal-description" className="read-only-form-note"><LockKeyhole size={15}/><span>{previewRole !== "owner" ? "This is a read-only permission preview. Return to your owner view to make changes." : "You can review this record. Changes require the appropriate plan role."}</span></div>}
+            {discardPrompt && <div className="discard-confirmation" role="alert">
+              <strong>Keep your changes?</strong>
+              <p>This form has unsaved changes. Keep editing to save them, or discard this draft.</p>
+              <div className="button-row"><Button secondary onClick={() => {setDiscardPrompt(false);setModal("");}}>Discard changes</Button><Button onClick={() => setDiscardPrompt(false)}>Keep editing</Button></div>
+            </div>}
             <form onSubmit={saveForm}><ReadOnlyContext.Provider value={!modalEditable}>
               {modal === "person" && (
                 <>
@@ -3306,34 +3388,26 @@ export default function Hearth() {
                   />
                   <input
                     type="file"
-                    accept="application/pdf,image/*,text/plain"
+                    accept=".pdf,.png,.jpg,.jpeg,.txt,application/pdf,image/png,image/jpeg,text/plain"
                     className="hidden"
                     ref={fileRef}
                     onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f) upload(f);
+                      e.target.value = "";
                     }}
                   />
-                  <button
-                    type="button"
-                    className="upload-zone"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    {uploading ? (
-                      <LoaderCircle className="spin" size={20} />
-                    ) : (
-                      <ArrowUpRight size={20} />
-                    )}
-                    <span>
-                      {form.fileId
-                        ? `Attachment uploaded${form.fileName ? `: ${form.fileName}` : ""}`
-                        : "Attach a PDF, image, or text file"}
-                      <small>
-                        Up to 5 MB. Private, permission-checked access.
-                      </small>
-                    </span>
-                  </button>
+                  <div className={`attachment-area ${draggingFile ? "dragging" : ""}`}
+                    onDragOver={e => {e.preventDefault();if(modalEditable && !uploading)setDraggingFile(true);}}
+                    onDragLeave={e => {if(!e.currentTarget.contains(e.relatedTarget as Node))setDraggingFile(false);}}
+                    onDrop={e => {e.preventDefault();setDraggingFile(false);if(modalEditable && !uploading){const file=e.dataTransfer.files[0];if(file)upload(file);}}}>
+                    <button type="button" className={`upload-zone ${form.fileId ? "has-attachment" : ""}`} onClick={() => fileRef.current?.click()} disabled={uploading || !modalEditable || offline} aria-label={form.fileId ? "Replace attachment" : "Choose an attachment"}>
+                      <span className="attachment-icon">{uploading ? <LoaderCircle className="spin" size={23}/> : form.fileId ? <FileText size={23}/> : <Upload size={23}/>}</span>
+                      <span className="attachment-copy"><strong>{uploading ? "Attaching your file…" : form.fileId ? form.fileName || "Your saved attachment" : "Keep a copy here"}</strong><small>{uploading ? "Please keep this form open." : form.fileId ? "Attached privately. Choose a different file to replace it." : "Choose a file or drop it here. PDF, PNG, JPEG or text, up to 5 MB."}</small></span>
+                      {form.fileId && !uploading && <Check size={18}/>}
+                    </button>
+                    <p className="attachment-privacy"><LockKeyhole size={12}/>{form.fileId ? "Save this record to keep the attachment with your plan." : "Only people permitted to see this record can download it."}</p>
+                  </div>
                 </>
               )}
               {modal === "account" && (
@@ -4338,7 +4412,7 @@ export default function Hearth() {
                       <Sparkles size={14} /> Review confirmed text
                     </Button>
                   )}
-                <Button secondary onClick={() => setModal("")}>
+                <Button secondary onClick={() => closeFormRef.current()} disabled={!!busy || uploading}>
                   {!modalEditable || (modal === "read-doc" && activeDocument?.extraction?.status === "accepted") ? "Close" : "Not now"}
                 </Button>
                 {modalEditable && !(modal === "read-doc" && activeDocument?.extraction?.status === "accepted") && <Button
@@ -4347,6 +4421,7 @@ export default function Hearth() {
                     previewRole !== "owner" ||
                     !!busy ||
                     uploading ||
+                    offline ||
                     (["analysis", "review", "extract", "analyze-doc"].includes(
                       modal,
                     ) &&
@@ -4451,7 +4526,9 @@ function SearchBox({
         placeholder={label + "…"}
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {if(e.key === "Escape")setValue("");}}
       />
+      {!!value && <button className="search-clear" type="button" aria-label="Clear search" onClick={(event) => {setValue("");(event.currentTarget.previousElementSibling as HTMLInputElement)?.focus();}}><X size={15}/></button>}
     </div>
   );
 }
@@ -4536,6 +4613,7 @@ function AuthorityStep({
 }
 function modelName(value?: string) {
   if (!value) return "Model not recorded";
+  if (value.includes("wonder-1.0")) return "Muse Wonder 1.0";
   if (value.includes("wonder")) return "Muse Wonder";
   if (value.includes("spark-1.3")) return "Muse Spark 1.3";
   if (value.includes("spark")) return "Muse Spark";
@@ -4606,7 +4684,7 @@ function ProposalReview({
                     <span>
                       {modelName(source.model)} · {date(source.at)}
                     </span>
-                    <code>SHA-256: {source.sha256 || "Not recorded"}</code>
+                    <span className="source-saved-note"><ShieldCheck size={14}/> Original review input preserved</span>
                   </div>
                   <pre>{source.text}</pre>
                   <small>

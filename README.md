@@ -125,7 +125,9 @@ MIT license applies to original project code. See LICENSE.
 
 ## Responsive interface
 
-The navigation scrolls independently while privacy and account controls remain visible. Phones and portrait tablets use a focus-managed drawer. Document and ledger records become labeled cards on phones, comparison rows name each charity, and forms retain visible actions with 16px input text. Save feedback clears after eight seconds. Checked layouts include 320px and 390px phones, a 768px tablet, and a 1280 × 640 laptop.
+Desktop navigation can collapse into an 82px icon rail and remembers the choice on this browser. Phones and portrait tablets use a bottom navigation bar with a focus-managed More sheet. Privacy and account controls remain reachable. Document and ledger records become labeled cards on phones, comparison rows name each charity, and forms retain visible actions with 16px input text. Uploads have readable filenames, matching format/size checks and drag-and-drop support. Unsaved forms ask before discarding edits; writes and uploads prevent an accidental close. Saved source views retain quotations and review dates without exposing technical hashes. Search includes a clear action. Save feedback clears after eight seconds. Checked layouts include 320px and 390px phones, a 768px tablet, and a 1280 × 640 laptop.
+
+See [the everyday usability pass](docs/quality-of-life.md) for the changes and bounded workflow checks. The branded favicon and home-screen icons match the rose-and-plum design.
 
 ## Review materials
 

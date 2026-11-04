@@ -38,6 +38,7 @@ export const documentSchema = z
     notes: txt(),
     visibility,
     fileId: txt(100).optional(),
+    fileName: txt(180).optional(),
     sourceText: txt(30000).optional(),
   })
   .superRefine((d, c) => {
