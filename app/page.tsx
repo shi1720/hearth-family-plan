@@ -3817,6 +3817,11 @@ export default function Hearth() {
               )}
               {modal === "task" && (
                 <>
+                  {(form.detail || form.sourceQuote) && <details className="task-context" open>
+                    <summary><BookOpen size={15}/> Instructions and source</summary>
+                    {form.detail && <p>{form.detail}</p>}
+                    {form.sourceQuote && <blockquote>{form.sourceQuote}<cite>Source wording preserved from the accepted suggestion</cite></blockquote>}
+                  </details>}
                   <Field
                     label="Next step"
                     name="title"

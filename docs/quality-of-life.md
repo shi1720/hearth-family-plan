@@ -16,7 +16,7 @@ Normal views show the saved source, model, review date and exact quote. They do 
 
 ## Branding and small conveniences
 
-The original Hearth arch-and-heart icon replaces the starter favicon. SVG, ICO, Apple touch and Android home-screen icons are provided. Search has a clear action and Escape reset. Invitation details use readable labels rather than raw JSON.
+The original Hearth arch-and-heart icon replaces the starter favicon. SVG, ICO, Apple touch and Android home-screen icons are provided. Search has a clear action and Escape reset. Opening an AI-created task includes its instructions and preserved source directly in the form. Invitation details use readable labels rather than raw JSON.
 
 ## Verification
 
